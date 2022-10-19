@@ -1,6 +1,19 @@
 # eng-blogs
 Read blog posts from engineering teams in one place
 
+## Approach
+1. Figure out which sites have RSS feeds.
+2. Write a checker that verifies if a site returns a 200 response (`curl -s -o /dev/null -w "%{http_code}" https://developer.salesforce.com/blogs/engineering/` --> 404). This should run before updating the feed each time.
+3. Read RSS feed links, company, post titles, post descriptions, and dates into a database.
+4. Format database content into a pretty UI and refresh database maybe once a day.
+
+## Tech
+- Railway for deployment and hosting
+- GitHub Actions for updates
+- Supabase for the database
+- Next.js for the frontend
+- Tailwind for styling
+
 ## Blog links
 - Netflix: https://netflixtechblog.com/
 - Twitter: https://blog.twitter.com/engineering/en_us
@@ -8,7 +21,6 @@ Read blog posts from engineering teams in one place
 - OpenAI: https://openai.com/blog/
 - Meta AI: https://ai.facebook.com/blog/
 - Meta: https://engineering.fb.com/
-- Google: https://developers.googleblog.com/
 - Notion: https://www.notion.so/blog/topic/tech
 - Ink and Switch: https://www.inkandswitch.com/
 - LinkedIn: https://engineering.linkedin.com/blog
@@ -26,3 +38,4 @@ Read blog posts from engineering teams in one place
 - Snorkel AI: https://snorkel.ai/resources/blog/
 - Hive AI: https://thehive.ai/blog/
 - Stability AI: https://stability.ai/blog
+- Cohere AI: https://txt.cohere.ai/
