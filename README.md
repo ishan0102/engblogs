@@ -39,3 +39,7 @@ Read blog posts from engineering teams in one place
 - Hive AI: https://thehive.ai/blog/
 - Stability AI: https://stability.ai/blog
 - Cohere AI: https://txt.cohere.ai/
+- Slack: https://slack.engineering/
+- Scale AI: https://scale.com/blog
+- Replit: https://blog.replit.com/
+- Spotify: https://engineering.atspotify.com/
