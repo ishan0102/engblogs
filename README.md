@@ -43,3 +43,6 @@ Read blog posts from engineering teams in one place
 - Scale AI: https://scale.com/blog
 - Replit: https://blog.replit.com/
 - Spotify: https://engineering.atspotify.com/
+- BAIR: https://bair.berkeley.edu/blog/
+- Deepmind: https://deepmind.com/blog
+- Microsoft AI: https://blogs.microsoft.com/ai/
