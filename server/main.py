@@ -1,23 +1,5 @@
-from fastapi import FastAPI, Depends
-from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Dict
 import feedparser
-import threading
-import time
-
-app = FastAPI()
-
-origins = [
-    "http://localhost:3000",
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 rss_urls = [
     "https://machinelearning.apple.com/rss.xml",
@@ -43,9 +25,6 @@ rss_urls = [
     "https://stability.ai/blog?format=rss",
 ]
 
-# Store the parsed feeds globally
-parsed_feeds: List[Dict] = []
-
 def parse_feed(url):
     feed = feedparser.parse(url)
     entries = []
@@ -53,23 +32,10 @@ def parse_feed(url):
         entries.append({
             'title': entry.title,
             'link': entry.link,
-            'published': entry.published
+            'published': entry.published,
         })
     return entries
 
-# This function will be run in the background and will update the parsed_feeds global variable every 24 hours
-def update_feeds_periodically():
-    global parsed_feeds
-    while True:
-        new_feeds = []
-        for rss_url in rss_urls:
-            new_feeds.extend(parse_feed(rss_url))
-        parsed_feeds = new_feeds
-        time.sleep(24 * 60 * 60)  # Wait for 24 hours
-
-# Start the background task
-threading.Thread(target=update_feeds_periodically, daemon=True).start()
-
-@app.get('/feeds')
-async def feeds(start: int = 0, limit: int = 10):
-    return parsed_feeds[start : start + limit]
+for url in rss_urls:
+    entries = parse_feed(url)
+    print(entries)
