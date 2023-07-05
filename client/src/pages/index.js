@@ -1,26 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { createClient } from '@supabase/supabase-js'
 
-export const BlogData = {
-  blogPostsList: [
-    {
-      id: 1,
-      title: "First Blog Post",
-      link: "/blog/first-blog-post",
-      published_at: "2023-07-04",
-      description: "This is a preview of the first blog post...",
-      company: "Company 1",
-    },
-    {
-      id: 2,
-      title: "Second Blog Post",
-      link: "/blog/second-blog-post",
-      published_at: "2023-07-05",
-      description: "This is a preview of the second blog post...",
-      company: "Company 2",
-    },
-  ]
-};
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 function BlogPost({ title, published_at, link, description, company }) {
   return (
@@ -43,12 +27,27 @@ function BlogPost({ title, published_at, link, description, company }) {
   )
 }
 
-
 export default function Home() {
+  const [blogPostsList, setBlogPostsList] = useState([]);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      let { data: posts, error } = await supabase
+        .from('posts')
+        .select("*")
+        .order('published_at', { ascending: false });
+
+      if (error) console.error("Error fetching posts:", error);
+      else setBlogPostsList(posts);
+    }
+
+    fetchPosts();
+  }, []);
+
   return (
     <div className="font-berkeley">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {BlogData.blogPostsList.map((post, index) => (
+        {blogPostsList.map((post, index) => (
           <BlogPost
             key={post.id}
             title={post.title}
