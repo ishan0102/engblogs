@@ -2,26 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+@layer base {
+    html {
+        @apply max-h-screen text-base antialiased;
+    }
+
+    /* handles safari overscroll background color */
+    body:after {
+        content: '';
+        position: fixed;
+        top: -50%;
+        right: -50%;
+        bottom: -50%;
+        left: -50%;
+        z-index: -1;
+        /* @apply bg-black; */
+    }
+
+    /* Apple II Mono */
+    @font-face {
+        font-family: 'berkeley';
+        src: url('../../public/static/fonts/berkeley.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+    }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
-}
+/* Your own custom utilities */
+@layer utilities {
+    .font-berkeley {
+        font-family: 'berkeley', monospace;
+    }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+    /* For Webkit-based browsers (Chrome, Safari and Opera) */
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* For IE, Edge and Firefox */
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        /* IE and Edge */
+        scrollbar-width: none;
+        /* Firefox */
+    }
 }
