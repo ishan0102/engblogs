@@ -16,8 +16,8 @@ function BlogPost({ title, published_at, link, summary, company }) {
       <div className="md:flex">
         <div className="p-8">
           <div className="flex justify-between items-center">
-            <div className="uppercase tracking-wide text-sm text-indigo-500 font-semibold">{published_at}</div>
-            <div className="text-sm">{company}</div>
+            <div className="tracking-wide text-sm text-indigo-500 font-semibold">{company}</div>
+            <div className="uppercase tracking-wide text-sm">{published_at}</div>
           </div>
           <div className="block mt-1 text-lg leading-tight font-medium">
             {title}
@@ -58,7 +58,7 @@ export default function Home() {
     else {
       setBlogPostsList(posts);
       setTotalPages(Math.ceil(count / POSTS_PER_PAGE));
-      
+
       // Store posts in cache
       sessionStorage.setItem(`posts-${pageNumber}`, JSON.stringify(posts));
     }
@@ -87,6 +87,13 @@ export default function Home() {
       <div className="flex text-center flex-col mb-4">
         <div className="font-bold text-4xl mb-2">engblogs</div>
         <div>learn from your favorite tech companies</div>
+      </div>
+      <div className="absolute top-4 right-4">
+        <a href="https://github.com/ishan0102/engblogs" target="_blank" rel="noopener noreferrer">
+          <button className="max-w-md mx-auto bg-white rounded-xl shadow-sm text-sm border border-gray-200 hover:border-indigo-500 transition p-2">
+            github
+          </button>
+        </a>
       </div>
 
       {/* Pagination */}
@@ -131,6 +138,35 @@ export default function Home() {
             company={post.company}
           />
         ))}
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-center mt-6 mb-4">
+        <button
+          onClick={() => setPage(page - 1)}
+          disabled={page === 0}
+          className="px-3 py-2 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
+        >
+          &lt;
+        </button>
+
+        <input
+          ref={pageInputRef}
+          type="number"
+          min="1"
+          max={totalPages}
+          value={page + 1}
+          onChange={handleInputChange}
+          className="px-3 py-2 mx-1 text-center w-16 appearance-none border border-gray-300 rounded-md text-sm font-medium"
+        />
+
+        <button
+          onClick={() => setPage(page + 1)}
+          disabled={page === totalPages - 1}
+          className="px-3 py-2 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
+        >
+          &gt;
+        </button>
       </div>
     </div>
   )
