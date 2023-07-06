@@ -26,6 +26,12 @@
         font-weight: normal;
         font-style: normal;
     }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
 }
 
 /* Your own custom utilities */

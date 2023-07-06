@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js'
 
@@ -35,44 +35,79 @@ function BlogPost({ title, published_at, link, summary, company }) {
 export default function Home() {
   const [blogPostsList, setBlogPostsList] = useState([]);
   const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+
+  const pageInputRef = useRef();
 
   useEffect(() => {
     const fetchPosts = async () => {
-      let { data: posts, error } = await supabase
+      let { count, data: posts, error } = await supabase
         .from('posts')
-        .select("*")
+        .select("*", { count: "exact" })
         .order('published_at', { ascending: false })
         .range(page * POSTS_PER_PAGE, (page + 1) * POSTS_PER_PAGE - 1);
 
       if (error) console.error("Error fetching posts:", error);
-      else setBlogPostsList(posts);
+      else {
+        setBlogPostsList(posts);
+        setTotalPages(Math.ceil(count / POSTS_PER_PAGE));
+      }
     }
 
     fetchPosts();
   }, [page]);
 
+  const handleInputChange = (event) => {
+    let inputValue = Number(event.target.value);
+    if (isNaN(inputValue)) return;
+
+    inputValue -= 1; // Convert to 0-indexed page
+    if (inputValue < 0) {
+      inputValue = 0;
+    } else if (inputValue >= totalPages) {
+      inputValue = totalPages - 1;
+    }
+    setPage(inputValue);
+  };
+
   return (
     <div className="font-berkeley m-8 md:m-14 pb-20">
+      {/* Header */}
       <div className="flex text-center flex-col mb-4">
         <div className="font-bold text-4xl mb-2">engblogs</div>
         <div>learn from your favorite tech companies</div>
       </div>
-      <div className="flex justify-center mt-6">
+
+      {/* Pagination */}
+      <div className="flex justify-center mt-6 mb-4">
         <button
           onClick={() => setPage(page - 1)}
           disabled={page === 0}
           className="px-3 py-2 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
         >
-          Previous
+          &lt;
         </button>
+
+        <input
+          ref={pageInputRef}
+          type="number"
+          min="1"
+          max={totalPages}
+          value={page + 1}
+          onChange={handleInputChange}
+          className="px-3 py-2 mx-1 text-center w-16 appearance-none border border-gray-300 rounded-md text-sm font-medium"
+        />
+
         <button
           onClick={() => setPage(page + 1)}
-          disabled={blogPostsList.length < POSTS_PER_PAGE}
+          disabled={page === totalPages - 1}
           className="px-3 py-2 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
         >
-          Next
+          &gt;
         </button>
       </div>
+
+      {/* Content */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {blogPostsList.map((post, index) => (
           <BlogPost
