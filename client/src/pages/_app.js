@@ -13,15 +13,10 @@ const defaultSEO = {
     site_name: 'engblogs',
     images: [
       {
-        url: 'https://www.countdowns.live/static/thumbnail.png',
+        url: 'https://www.engblogs.dev/static/thumbnail.png',
         alt: 'engblogs.dev homepage',
       },
     ],
-  },
-  twitter: {
-    handle: '@ishan0102',
-    site: '@ishan0102',
-    cardType: 'summary_large_image',
   },
 };
 
