@@ -4,6 +4,11 @@ learn from your favorite tech companies
 ## what is this
 yes you could use an RSS reader but what's the fun in that? I run a cronjob that scrapes the RSS feeds of the companies listed below, calls GPT-3.5 to generate a short summary, and stores the data in supabase. there's a little next.js app hosted on vercel that lets you browse the data.
 
+![diagram](https://github.com/ishan0102/engblogs/assets/47067154/5d790c64-e11a-4cdd-b862-3e645875fa4e)
+
+## develop
+`npm run dev` in the `client` folder
+
 ## links
 | Company        | Link                                                                 |
 |----------------|----------------------------------------------------------------------|
