@@ -39,22 +39,33 @@ export default function Home() {
 
   const pageInputRef = useRef();
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      let { count, data: posts, error } = await supabase
-        .from('posts')
-        .select("*", { count: "exact" })
-        .order('published_at', { ascending: false })
-        .range(page * POSTS_PER_PAGE, (page + 1) * POSTS_PER_PAGE - 1);
+  const fetchPosts = async (pageNumber) => {
+    // Check if posts are already stored in cache
+    const cachedPosts = localStorage.getItem(`posts-${pageNumber}`);
 
-      if (error) console.error("Error fetching posts:", error);
-      else {
-        setBlogPostsList(posts);
-        setTotalPages(Math.ceil(count / POSTS_PER_PAGE));
-      }
+    if (cachedPosts) {
+      setBlogPostsList(JSON.parse(cachedPosts));
+      return;
     }
 
-    fetchPosts();
+    let { count, data: posts, error } = await supabase
+      .from('posts')
+      .select("*", { count: "exact" })
+      .order('published_at', { ascending: false })
+      .range(pageNumber * POSTS_PER_PAGE, (pageNumber + 1) * POSTS_PER_PAGE - 1);
+
+    if (error) console.error("Error fetching posts:", error);
+    else {
+      setBlogPostsList(posts);
+      setTotalPages(Math.ceil(count / POSTS_PER_PAGE));
+      
+      // Store posts in cache
+      localStorage.setItem(`posts-${pageNumber}`, JSON.stringify(posts));
+    }
+  }
+
+  useEffect(() => {
+    fetchPosts(page);
   }, [page]);
 
   const handleInputChange = (event) => {
@@ -71,7 +82,7 @@ export default function Home() {
   };
 
   return (
-    <div className="font-berkeley m-8 md:m-14 pb-20">
+    <div className="font-berkeley m-8 md:m-10 pb-20">
       {/* Header */}
       <div className="flex text-center flex-col mb-4">
         <div className="font-bold text-4xl mb-2">engblogs</div>
