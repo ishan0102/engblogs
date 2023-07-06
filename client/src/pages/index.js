@@ -32,12 +32,36 @@ function BlogPost({ title, published_at, link, summary, company }) {
   )
 }
 
+function Pagination({ page, totalPages, setPage }) {
+  return (
+    <div className="flex justify-center mt-6 mb-4">
+      <button
+        onClick={() => setPage(page - 1)}
+        disabled={page === 0}
+        className="px-3 py-2 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
+      >
+        &lt;
+      </button>
+
+      <div className="px-4 py-2 mx-1 border border-indigo-500 text-indigo-500 rounded">
+        {page + 1}
+      </div>
+
+      <button
+        onClick={() => setPage(page + 1)}
+        disabled={page === totalPages - 1}
+        className="px-3 py-2 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
+      >
+        &gt;
+      </button>
+    </div>
+  )
+}
+
 export default function Home() {
   const [blogPostsList, setBlogPostsList] = useState([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-
-  const pageInputRef = useRef();
 
   const fetchPosts = async (pageNumber) => {
     // Check if posts are already stored in cache
@@ -68,19 +92,6 @@ export default function Home() {
     fetchPosts(page);
   }, [page]);
 
-  const handleInputChange = (event) => {
-    let inputValue = Number(event.target.value);
-    if (isNaN(inputValue)) return;
-
-    inputValue -= 1; // Convert to 0-indexed page
-    if (inputValue < 0) {
-      inputValue = 0;
-    } else if (inputValue >= totalPages) {
-      inputValue = totalPages - 1;
-    }
-    setPage(inputValue);
-  };
-
   return (
     <div className="font-berkeley m-8 md:m-10 pb-20">
       {/* Header */}
@@ -88,44 +99,16 @@ export default function Home() {
         <div className="font-bold text-4xl mb-2">engblogs</div>
         <div>learn from your favorite tech companies</div>
       </div>
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-0 right-0 md:top-4 md:right-4">
         <a href="https://github.com/ishan0102/engblogs" target="_blank" rel="noopener noreferrer">
-          <button className="max-w-md mx-auto bg-white rounded-xl shadow-sm text-sm border border-gray-200 hover:border-indigo-500 transition p-2">
+          <button className="max-w-md mx-auto bg-white rounded-lg text-sm border border-white hover:border-black transition p-2">
             github
           </button>
         </a>
       </div>
 
-      {/* Pagination */}
-      <div className="flex justify-center mt-6 mb-4">
-        <button
-          onClick={() => setPage(page - 1)}
-          disabled={page === 0}
-          className="px-3 py-2 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
-        >
-          &lt;
-        </button>
-
-        <input
-          ref={pageInputRef}
-          type="number"
-          min="1"
-          max={totalPages}
-          value={page + 1}
-          onChange={handleInputChange}
-          className="px-3 py-2 mx-1 text-center w-16 appearance-none border border-gray-300 rounded-md text-sm font-medium"
-        />
-
-        <button
-          onClick={() => setPage(page + 1)}
-          disabled={page === totalPages - 1}
-          className="px-3 py-2 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
-        >
-          &gt;
-        </button>
-      </div>
-
       {/* Content */}
+      <Pagination page={page} totalPages={totalPages} setPage={setPage} />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {blogPostsList.map((post, index) => (
           <BlogPost
@@ -139,35 +122,7 @@ export default function Home() {
           />
         ))}
       </div>
-
-      {/* Pagination */}
-      <div className="flex justify-center mt-6 mb-4">
-        <button
-          onClick={() => setPage(page - 1)}
-          disabled={page === 0}
-          className="px-3 py-2 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
-        >
-          &lt;
-        </button>
-
-        <input
-          ref={pageInputRef}
-          type="number"
-          min="1"
-          max={totalPages}
-          value={page + 1}
-          onChange={handleInputChange}
-          className="px-3 py-2 mx-1 text-center w-16 appearance-none border border-gray-300 rounded-md text-sm font-medium"
-        />
-
-        <button
-          onClick={() => setPage(page + 1)}
-          disabled={page === totalPages - 1}
-          className="px-3 py-2 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
-        >
-          &gt;
-        </button>
-      </div>
+      <Pagination page={page} totalPages={totalPages} setPage={setPage} />
     </div>
   )
 }
