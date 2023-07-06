@@ -41,7 +41,7 @@ export default function Home() {
 
   const fetchPosts = async (pageNumber) => {
     // Check if posts are already stored in cache
-    const cachedPosts = localStorage.getItem(`posts-${pageNumber}`);
+    const cachedPosts = sessionStorage.getItem(`posts-${pageNumber}`);
 
     if (cachedPosts) {
       setBlogPostsList(JSON.parse(cachedPosts));
@@ -60,7 +60,7 @@ export default function Home() {
       setTotalPages(Math.ceil(count / POSTS_PER_PAGE));
       
       // Store posts in cache
-      localStorage.setItem(`posts-${pageNumber}`, JSON.stringify(posts));
+      sessionStorage.setItem(`posts-${pageNumber}`, JSON.stringify(posts));
     }
   }
 
