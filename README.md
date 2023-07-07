@@ -9,7 +9,14 @@ yes you could use an RSS reader but what's the fun in that? I run a cronjob that
 ## develop
 `npm run dev` in the `client` folder
 
-## links
+## cron
+for my own reference, this is the cron command that ended up working:
+```sh
+0 * * * * ~/documents/engblogs/scripts/run.sh >/dev/null 2>&1
+```
+it's running hourly rather than daily now because the updater script is way faster (~10s)
+
+## blog links
 | Company        | Link                                                                 |
 |----------------|----------------------------------------------------------------------|
 | AWS ML         | [https://aws.amazon.com/blogs/machine-learning/feed/](https://aws.amazon.com/blogs/machine-learning/feed/)               |
