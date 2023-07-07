@@ -97,7 +97,7 @@ export default function Home() {
       {/* Header */}
       <div className="flex text-center flex-col mb-4">
         <div className="font-bold text-4xl mb-2">engblogs</div>
-        <div>learn from your favorite tech companies</div>
+        <div className="text-md">learn from your favorite tech companies</div>
       </div>
       <div className="absolute top-0 right-0 md:top-4 md:right-4">
         <a href="https://github.com/ishan0102/engblogs" target="_blank" rel="noopener noreferrer">
@@ -123,6 +123,10 @@ export default function Home() {
         ))}
       </div>
       <Pagination page={page} totalPages={totalPages} setPage={setPage} />
+      <div className="text-center mt-8">
+        built by <a className="text-indigo-500" href="https://www.ishanshah.me/" target="_blank">ishan</a>.
+        summaries by <a className="text-indigo-500" href="https://platform.openai.com/docs/models/gpt-3-5" target="_blank">gpt-3.5</a>.
+      </div>
     </div>
   )
 }
