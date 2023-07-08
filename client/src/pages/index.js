@@ -82,6 +82,7 @@ export default function Home() {
   const [blogPostsList, setBlogPostsList] = useState([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   const fetchPosts = async (pageNumber) => {
     // Check if posts are already stored in cache
@@ -106,6 +107,9 @@ export default function Home() {
 
       const totalPages = Math.ceil(count / POSTS_PER_PAGE);
       setTotalPages(totalPages);
+
+      // Update dataLoaded state
+      setDataLoaded(true);
 
       // Store posts and totalPages in cache
       sessionStorage.setItem(`posts-${pageNumber}`, JSON.stringify(posts));
@@ -133,7 +137,7 @@ export default function Home() {
       </div>
 
       {/* Content */}
-      <Pagination page={page} totalPages={totalPages} setPage={setPage} />
+      {dataLoaded && <Pagination page={page} totalPages={totalPages} setPage={setPage} />}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {blogPostsList.map((post, index) => (
           <BlogPost
@@ -147,11 +151,28 @@ export default function Home() {
           />
         ))}
       </div>
-      <Pagination page={page} totalPages={totalPages} setPage={setPage} />
-      <div className="text-center mt-8">
-        built by <a className="text-indigo-500" href="https://www.ishanshah.me/" target="_blank">ishan</a>.
-        summaries by <a className="text-indigo-500" href="https://platform.openai.com/docs/models/gpt-3-5" target="_blank">gpt-3.5</a>.
-      </div>
+      {dataLoaded && <Pagination page={page} totalPages={totalPages} setPage={setPage} />}
+
+      {/* Loading */}
+      {
+        !dataLoaded && (
+          <div className="flex justify-center mt-8">
+            <svg className="animate-spin h-8 w-8 text-indigo-500" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" fill="none"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+          </div>
+        )
+      }
+
+      {/* Footer */}
+      {
+        dataLoaded && 
+        <div className="text-center mt-8">
+          built by <a className="text-indigo-500" href="https://www.ishanshah.me/" target="_blank">ishan</a>.
+          summaries by <a className="text-indigo-500" href="https://platform.openai.com/docs/models/gpt-3-5" target="_blank">gpt-3.5</a>.
+        </div>
+      }
     </div>
   )
 }
