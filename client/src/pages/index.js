@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js'
+import Select from 'react-select';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_KEY;
@@ -33,6 +34,13 @@ function BlogPost({ title, published_at, link, summary, company }) {
 }
 
 function Pagination({ page, totalPages, setPage }) {
+  const handleChange = selectedOption => {
+    setPage(selectedOption.value - 1);
+    window.scrollTo(0, 0);
+  };
+
+  const options = Array.from({length: totalPages}, (_, i) => ({value: i + 1, label: i + 1}));
+
   return (
     <div className="flex justify-center mt-6 mb-4">
       <button
@@ -43,8 +51,15 @@ function Pagination({ page, totalPages, setPage }) {
         &lt;
       </button>
 
-      <div className="px-4 py-2 mx-1 border border-indigo-500 text-indigo-500 rounded">
-        {page + 1}
+      <div className="px-2 mx-1">
+        <Select 
+          value={{value: page + 1, label: page + 1}}
+          onChange={handleChange}
+          options={options}
+          isSearchable={false}
+          className="my-1 rounded text-black"
+          menuPlacement="auto"
+        />
       </div>
 
       <button
@@ -58,6 +73,7 @@ function Pagination({ page, totalPages, setPage }) {
   )
 }
 
+
 export default function Home() {
   const [blogPostsList, setBlogPostsList] = useState([]);
   const [page, setPage] = useState(0);
@@ -66,9 +82,11 @@ export default function Home() {
   const fetchPosts = async (pageNumber) => {
     // Check if posts are already stored in cache
     const cachedPosts = sessionStorage.getItem(`posts-${pageNumber}`);
+    const cachedTotalPages = sessionStorage.getItem('totalPages');
 
-    if (cachedPosts) {
+    if (cachedPosts && cachedTotalPages) {
       setBlogPostsList(JSON.parse(cachedPosts));
+      setTotalPages(parseInt(cachedTotalPages));
       return;
     }
 
@@ -81,10 +99,13 @@ export default function Home() {
     if (error) console.error("Error fetching posts:", error);
     else {
       setBlogPostsList(posts);
-      setTotalPages(Math.ceil(count / POSTS_PER_PAGE));
 
-      // Store posts in cache
+      const totalPages = Math.ceil(count / POSTS_PER_PAGE);
+      setTotalPages(totalPages);
+
+      // Store posts and totalPages in cache
       sessionStorage.setItem(`posts-${pageNumber}`, JSON.stringify(posts));
+      sessionStorage.setItem('totalPages', totalPages.toString());
     }
   }
 
