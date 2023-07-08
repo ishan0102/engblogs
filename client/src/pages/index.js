@@ -77,15 +77,23 @@ function Pagination({ page, totalPages, setPage }) {
   )
 }
 
+function getSessionPage() {
+  if (typeof window !== 'undefined') {
+    const cachedPage = sessionStorage.getItem("currentPage");
+    return cachedPage ? parseInt(cachedPage) : 0;
+  } else {
+    return 0;
+  }
+}
+
 export default function Home() {
   const [blogPostsList, setBlogPostsList] = useState([]);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(getSessionPage());
   const [totalPages, setTotalPages] = useState(0);
   const [dataLoaded, setDataLoaded] = useState(false);
   
   // Fetching
   const fetchPosts = async (pageNumber) => {
-    console.log("Fetching page", pageNumber);
     // Check if posts are already stored in cache
     const cachedPosts = sessionStorage.getItem(`posts-${pageNumber}`);
     const cachedTotalPages = sessionStorage.getItem('totalPages');
@@ -119,6 +127,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchPosts(page);
+    sessionStorage.setItem("currentPage", page);
   }, [page]);
 
   // Prefetching
@@ -128,7 +137,6 @@ export default function Home() {
     // If we have the data in the cache, no need to prefetch
     if (cachedPosts) return;
     
-    console.log("Prefetching page", pageNumber);
     let { count, data: posts, error } = await supabase
       .from('posts')
       .select("*", { count: "exact" })
@@ -144,7 +152,6 @@ export default function Home() {
   };
 
   useEffect(() => {
-    // Pre-fetch next and previous page
     const nextPage = page + 1;
     if (nextPage < totalPages) {
       prefetchPosts(nextPage);
