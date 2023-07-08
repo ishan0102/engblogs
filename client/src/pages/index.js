@@ -77,49 +77,84 @@ function Pagination({ page, totalPages, setPage }) {
   )
 }
 
-
 export default function Home() {
   const [blogPostsList, setBlogPostsList] = useState([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [dataLoaded, setDataLoaded] = useState(false);
-
+  
+  // Fetching
   const fetchPosts = async (pageNumber) => {
+    console.log("Fetching page", pageNumber);
     // Check if posts are already stored in cache
     const cachedPosts = sessionStorage.getItem(`posts-${pageNumber}`);
     const cachedTotalPages = sessionStorage.getItem('totalPages');
-
+  
     if (cachedPosts && cachedTotalPages) {
       setBlogPostsList(JSON.parse(cachedPosts));
       setTotalPages(parseInt(cachedTotalPages));
-      return;
+      setDataLoaded(true);
+    } else {
+      let { count, data: posts, error } = await supabase
+        .from('posts')
+        .select("*", { count: "exact" })
+        .order('published_at', { ascending: false })
+        .range(pageNumber * POSTS_PER_PAGE, (pageNumber + 1) * POSTS_PER_PAGE - 1);
+  
+      if (error) {
+        console.error("Error fetching posts:", error);
+      } else {
+        setBlogPostsList(posts);
+  
+        const totalPages = Math.ceil(count / POSTS_PER_PAGE);
+        setTotalPages(totalPages);
+        setDataLoaded(true);
+  
+        // Store posts and totalPages in cache
+        sessionStorage.setItem(`posts-${pageNumber}`, JSON.stringify(posts));
+        sessionStorage.setItem('totalPages', totalPages.toString());
+      }
     }
+  };
 
+  useEffect(() => {
+    fetchPosts(page);
+  }, [page]);
+
+  // Prefetching
+  const prefetchPosts = async (pageNumber) => {
+    const cachedPosts = sessionStorage.getItem(`posts-${pageNumber}`);
+    
+    // If we have the data in the cache, no need to prefetch
+    if (cachedPosts) return;
+    
+    console.log("Prefetching page", pageNumber);
     let { count, data: posts, error } = await supabase
       .from('posts')
       .select("*", { count: "exact" })
       .order('published_at', { ascending: false })
       .range(pageNumber * POSTS_PER_PAGE, (pageNumber + 1) * POSTS_PER_PAGE - 1);
-
-    if (error) console.error("Error fetching posts:", error);
-    else {
-      setBlogPostsList(posts);
-
-      const totalPages = Math.ceil(count / POSTS_PER_PAGE);
-      setTotalPages(totalPages);
-
-      // Update dataLoaded state
-      setDataLoaded(true);
-
-      // Store posts and totalPages in cache
+  
+    if (error) {
+      console.error("Error prefetching posts:", error);
+    } else {
+      // Store posts in cache
       sessionStorage.setItem(`posts-${pageNumber}`, JSON.stringify(posts));
-      sessionStorage.setItem('totalPages', totalPages.toString());
     }
-  }
+  };
 
   useEffect(() => {
-    fetchPosts(page);
-  }, [page]);
+    // Pre-fetch next and previous page
+    const nextPage = page + 1;
+    if (nextPage < totalPages) {
+      prefetchPosts(nextPage);
+    }
+  
+    const prevPage = page - 1;
+    if (prevPage >= 0) {
+      prefetchPosts(prevPage);
+    }
+  }, [page, totalPages]);
 
   return (
     <div className="font-berkeley m-8 md:m-10 pb-20">
@@ -154,8 +189,7 @@ export default function Home() {
       {dataLoaded && <Pagination page={page} totalPages={totalPages} setPage={setPage} />}
 
       {/* Loading */}
-      {
-        !dataLoaded && (
+      {!dataLoaded && (
           <div className="flex justify-center mt-8">
             <svg className="animate-spin h-8 w-8 text-indigo-500" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" fill="none"></circle>
@@ -166,8 +200,7 @@ export default function Home() {
       }
 
       {/* Footer */}
-      {
-        dataLoaded && 
+      {dataLoaded && 
         <div className="text-center mt-8">
           built by <a className="text-indigo-500" href="https://www.ishanshah.me/" target="_blank">ishan</a>.
           summaries by <a className="text-indigo-500" href="https://platform.openai.com/docs/models/gpt-3-5" target="_blank">gpt-3.5</a>.
