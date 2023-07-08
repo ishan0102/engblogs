@@ -33,6 +33,10 @@ function BlogPost({ title, published_at, link, summary, company }) {
 }
 
 function Pagination({ page, totalPages, setPage }) {
+  const handleChange = (event) => {
+    setPage(parseInt(event.target.value) - 1);
+  }
+
   return (
     <div className="flex justify-center mt-6 mb-4">
       <button
@@ -43,8 +47,23 @@ function Pagination({ page, totalPages, setPage }) {
         &lt;
       </button>
 
-      <div className="px-4 py-2 mx-1 border border-indigo-500 text-indigo-500 rounded">
-        {page + 1}
+      <div className="mx-2 inline-flex">
+        <select
+          value={page + 1}
+          onChange={handleChange}
+          className="px-4 border border-indigo-500 text-indigo-500 rounded"
+        >
+          {Array.from({ length: totalPages }, (_, i) => (
+            <option key={i} value={i + 1}>
+              {i + 1}
+            </option>
+          ))}
+        </select>
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+          <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+          </svg>
+        </div>
       </div>
 
       <button
@@ -58,6 +77,7 @@ function Pagination({ page, totalPages, setPage }) {
   )
 }
 
+
 export default function Home() {
   const [blogPostsList, setBlogPostsList] = useState([]);
   const [page, setPage] = useState(0);
@@ -66,9 +86,11 @@ export default function Home() {
   const fetchPosts = async (pageNumber) => {
     // Check if posts are already stored in cache
     const cachedPosts = sessionStorage.getItem(`posts-${pageNumber}`);
+    const cachedTotalPages = sessionStorage.getItem('totalPages');
 
-    if (cachedPosts) {
+    if (cachedPosts && cachedTotalPages) {
       setBlogPostsList(JSON.parse(cachedPosts));
+      setTotalPages(parseInt(cachedTotalPages));
       return;
     }
 
@@ -81,10 +103,13 @@ export default function Home() {
     if (error) console.error("Error fetching posts:", error);
     else {
       setBlogPostsList(posts);
-      setTotalPages(Math.ceil(count / POSTS_PER_PAGE));
 
-      // Store posts in cache
+      const totalPages = Math.ceil(count / POSTS_PER_PAGE);
+      setTotalPages(totalPages);
+
+      // Store posts and totalPages in cache
       sessionStorage.setItem(`posts-${pageNumber}`, JSON.stringify(posts));
+      sessionStorage.setItem('totalPages', totalPages.toString());
     }
   }
 
