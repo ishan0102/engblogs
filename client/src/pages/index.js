@@ -39,21 +39,23 @@ function Pagination({ page, totalPages, setPage }) {
     window.scrollTo(0, 0);
   };
 
-  const options = Array.from({length: totalPages}, (_, i) => ({value: i + 1, label: i + 1}));
+  const options = Array.from({ length: totalPages }, (_, i) => ({ value: i + 1, label: i + 1 }));
 
   return (
     <div className="flex justify-center mt-6 mb-4">
       <button
         onClick={() => setPage(page - 1)}
         disabled={page === 0}
-        className="px-3 py-2 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
+        className="px-1 py-2 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
       >
-        &lt;
+        <svg width="32" height="32" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13.25 8.75L9.75 12L13.25 15.25"></path>
+        </svg>
       </button>
 
       <div className="px-2 mx-1">
-        <Select 
-          value={{value: page + 1, label: page + 1}}
+        <Select
+          value={{ value: page + 1, label: page + 1 }}
           onChange={handleChange}
           options={options}
           isSearchable={false}
@@ -65,9 +67,11 @@ function Pagination({ page, totalPages, setPage }) {
       <button
         onClick={() => setPage(page + 1)}
         disabled={page === totalPages - 1}
-        className="px-3 py-2 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
+        className="px-1 py-2 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
       >
-        &gt;
+        <svg width="32" height="32" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10.75 8.75L14.25 12L10.75 15.25"></path>
+        </svg>
       </button>
     </div>
   )
