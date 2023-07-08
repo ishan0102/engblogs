@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js'
+import Select from 'react-select';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_KEY;
@@ -33,9 +34,12 @@ function BlogPost({ title, published_at, link, summary, company }) {
 }
 
 function Pagination({ page, totalPages, setPage }) {
-  const handleChange = (event) => {
-    setPage(parseInt(event.target.value) - 1);
-  }
+  const handleChange = selectedOption => {
+    setPage(selectedOption.value - 1);
+    window.scrollTo(0, 0);
+  };
+
+  const options = Array.from({length: totalPages}, (_, i) => ({value: i + 1, label: i + 1}));
 
   return (
     <div className="flex justify-center mt-6 mb-4">
@@ -47,23 +51,15 @@ function Pagination({ page, totalPages, setPage }) {
         &lt;
       </button>
 
-      <div className="mx-2 inline-flex">
-        <select
-          value={page + 1}
+      <div className="px-2 mx-1">
+        <Select 
+          value={{value: page + 1, label: page + 1}}
           onChange={handleChange}
-          className="px-4 border border-indigo-500 text-indigo-500 rounded"
-        >
-          {Array.from({ length: totalPages }, (_, i) => (
-            <option key={i} value={i + 1}>
-              {i + 1}
-            </option>
-          ))}
-        </select>
-        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-          <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-          </svg>
-        </div>
+          options={options}
+          isSearchable={false}
+          className="my-1 rounded text-black"
+          menuPlacement="auto"
+        />
       </div>
 
       <button
