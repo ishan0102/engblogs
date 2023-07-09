@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_KEY;
@@ -58,13 +58,50 @@ function Pagination({ page, totalPages, setPage }) {
   )
 }
 
+function Filter({ onFilterChange }) {
+  const handleFilterChange = (event) => {
+    const filterValue = event.target.value;
+    console.log(filterValue);
+    onFilterChange(filterValue);
+  };
+
+  return (
+    <div className="mt-4 mb-6 text-center">
+      <label htmlFor="filter" className="mr-2 font-medium">
+        Filter posts by:
+      </label>
+      <select
+        id="filter"
+        className="border border-gray-300 rounded px-2 py-1"
+        onChange={handleFilterChange}
+      >
+        <option value="">All</option>
+        <option value="Company 10">Company 10</option>
+        <option value="Company 20">Company 20</option>
+        {/* Add more options based on your requirements */}
+      </select>
+    </div>
+  );
+}
+
 export default function Home() {
   const [blogPostsList, setBlogPostsList] = useState([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [filter, setFilter] = useState('');
+
+  const handleFilterChange = (filterValue) => {
+    console.log("should trigger useEffect... again by resetting page to zero...");
+    console.log("Filter value:", filterValue);
+
+    setFilter(filterValue);
+    setPage(0); // Reset page when filter changes to display results from the first page
+  };
 
   const fetchPosts = async (pageNumber) => {
     // Check if posts are already stored in cache
+    console.log("Triggering databse call...")
+    console.log("Filtering with:", filter);
     const cachedPosts = sessionStorage.getItem(`posts-${pageNumber}`);
 
     if (cachedPosts) {
@@ -72,11 +109,19 @@ export default function Home() {
       return;
     }
 
-    let { count, data: posts, error } = await supabase
+    let  query = supabase
       .from('posts')
       .select("*", { count: "exact" })
       .order('published_at', { ascending: false })
       .range(pageNumber * POSTS_PER_PAGE, (pageNumber + 1) * POSTS_PER_PAGE - 1);
+
+    // Apply filter if a filter value is selected
+    if (filter) {
+      console.log("Inside company filtering-", filter);
+      query = query.eq('company', filter);
+    }
+
+    const { count, data: posts, error } = await query;
 
     if (error) console.error("Error fetching posts:", error);
     else {
@@ -84,13 +129,14 @@ export default function Home() {
       setTotalPages(Math.ceil(count / POSTS_PER_PAGE));
 
       // Store posts in cache
-      sessionStorage.setItem(`posts-${pageNumber}`, JSON.stringify(posts));
+      // sessionStorage.setItem(`posts-${pageNumber}`, JSON.stringify(posts));
     }
   }
 
   useEffect(() => {
     fetchPosts(page);
-  }, [page]);
+    console.log("I fire only once...")
+  }, [page, filter]);
 
   return (
     <div className="font-berkeley m-8 md:m-10 pb-20">
@@ -106,6 +152,9 @@ export default function Home() {
           </button>
         </a>
       </div>
+
+      {/* Filter */}
+      <Filter onFilterChange={handleFilterChange} />
 
       {/* Content */}
       <Pagination page={page} totalPages={totalPages} setPage={setPage} />
