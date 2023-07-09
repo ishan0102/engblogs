@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js'
+import Select from 'react-select';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_KEY;
@@ -33,26 +34,44 @@ function BlogPost({ title, published_at, link, summary, company }) {
 }
 
 function Pagination({ page, totalPages, setPage }) {
+  const handleChange = selectedOption => {
+    setPage(selectedOption.value - 1);
+    window.scrollTo(0, 0);
+  };
+
+  const options = Array.from({ length: totalPages }, (_, i) => ({ value: i + 1, label: i + 1 }));
+
   return (
     <div className="flex justify-center mt-6 mb-4">
       <button
         onClick={() => setPage(page - 1)}
         disabled={page === 0}
-        className="px-3 py-2 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
+        className="px-1 py-2 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
       >
-        &lt;
+        <svg width="32" height="32" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13.25 8.75L9.75 12L13.25 15.25"></path>
+        </svg>
       </button>
 
-      <div className="px-4 py-2 mx-1 border border-indigo-500 text-indigo-500 rounded">
-        {page + 1}
+      <div className="px-2 mx-1">
+        <Select
+          value={{ value: page + 1, label: page + 1 }}
+          onChange={handleChange}
+          options={options}
+          isSearchable={false}
+          className="my-1 rounded text-black"
+          menuPlacement="auto"
+        />
       </div>
 
       <button
         onClick={() => setPage(page + 1)}
         disabled={page === totalPages - 1}
-        className="px-3 py-2 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
+        className="px-1 py-2 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
       >
-        &gt;
+        <svg width="32" height="32" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10.75 8.75L14.25 12L10.75 15.25"></path>
+        </svg>
       </button>
     </div>
   )
@@ -84,11 +103,21 @@ function Filter({ onFilterChange }) {
   );
 }
 
+function getSessionPage() {
+  if (typeof window !== 'undefined') {
+    const cachedPage = sessionStorage.getItem("currentPage");
+    return cachedPage ? parseInt(cachedPage) : 0;
+  } else {
+    return 0;
+  }
+}
+
 export default function Home() {
   const [blogPostsList, setBlogPostsList] = useState([]);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(getSessionPage());
   const [totalPages, setTotalPages] = useState(0);
-  const [filter, setFilter] = useState('');
+  const [dataLoaded, setDataLoaded] = useState(false);
+    const [filter, setFilter] = useState('');
 
   const handleFilterChange = (filterValue) => {
     console.log("should trigger useEffect... again by resetting page to zero...");
@@ -98,18 +127,54 @@ export default function Home() {
     setPage(0); // Reset page when filter changes to display results from the first page
   };
 
+  // Fetching
   const fetchPosts = async (pageNumber) => {
     // Check if posts are already stored in cache
     console.log("Triggering databse call...")
     console.log("Filtering with:", filter);
     const cachedPosts = sessionStorage.getItem(`posts-${pageNumber}`);
-
-    if (cachedPosts) {
+    const cachedTotalPages = sessionStorage.getItem('totalPages');
+  
+    if (cachedPosts && cachedTotalPages) {
       setBlogPostsList(JSON.parse(cachedPosts));
-      return;
+      setTotalPages(parseInt(cachedTotalPages));
+      setDataLoaded(true);
+    } else {
+      let { count, data: posts, error } = await supabase
+        .from('posts')
+        .select("*", { count: "exact" })
+        .order('published_at', { ascending: false })
+        .range(pageNumber * POSTS_PER_PAGE, (pageNumber + 1) * POSTS_PER_PAGE - 1);
+  
+      if (error) {
+        console.error("Error fetching posts:", error);
+      } else {
+        setBlogPostsList(posts);
+  
+        const totalPages = Math.ceil(count / POSTS_PER_PAGE);
+        setTotalPages(totalPages);
+        setDataLoaded(true);
+  
+        // Store posts and totalPages in cache
+        sessionStorage.setItem(`posts-${pageNumber}`, JSON.stringify(posts));
+        sessionStorage.setItem('totalPages', totalPages.toString());
+      }
     }
+  };
 
-    let  query = supabase
+  useEffect(() => {
+    fetchPosts(page);
+    sessionStorage.setItem("currentPage", page);
+  }, [page]);
+
+  // Prefetching
+  const prefetchPosts = async (pageNumber) => {
+    const cachedPosts = sessionStorage.getItem(`posts-${pageNumber}`);
+    
+    // If we have the data in the cache, no need to prefetch
+    if (cachedPosts) return;
+    
+    let { count, data: posts, error } = await supabase
       .from('posts')
       .select("*", { count: "exact" })
       .order('published_at', { ascending: false })
@@ -128,15 +193,26 @@ export default function Home() {
       setBlogPostsList(posts);
       setTotalPages(Math.ceil(count / POSTS_PER_PAGE));
 
+  
+    if (error) {
+      console.error("Error prefetching posts:", error);
+    } else {
       // Store posts in cache
       // sessionStorage.setItem(`posts-${pageNumber}`, JSON.stringify(posts));
     }
-  }
+  };
 
   useEffect(() => {
-    fetchPosts(page);
-    console.log("I fire only once...")
-  }, [page, filter]);
+    const nextPage = page + 1;
+    if (nextPage < totalPages) {
+      prefetchPosts(nextPage);
+    }
+  
+    const prevPage = page - 1;
+    if (prevPage >= 0) {
+      prefetchPosts(prevPage);
+    }
+  }, [page, totalPages]);
 
   return (
     <div className="font-berkeley m-8 md:m-10 pb-20">
@@ -157,7 +233,7 @@ export default function Home() {
       <Filter onFilterChange={handleFilterChange} />
 
       {/* Content */}
-      <Pagination page={page} totalPages={totalPages} setPage={setPage} />
+      {dataLoaded && <Pagination page={page} totalPages={totalPages} setPage={setPage} />}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {blogPostsList.map((post, index) => (
           <BlogPost
@@ -171,11 +247,26 @@ export default function Home() {
           />
         ))}
       </div>
-      <Pagination page={page} totalPages={totalPages} setPage={setPage} />
-      <div className="text-center mt-8">
-        built by <a className="text-indigo-500" href="https://www.ishanshah.me/" target="_blank">ishan</a>.
-        summaries by <a className="text-indigo-500" href="https://platform.openai.com/docs/models/gpt-3-5" target="_blank">gpt-3.5</a>.
-      </div>
+      {dataLoaded && <Pagination page={page} totalPages={totalPages} setPage={setPage} />}
+
+      {/* Loading */}
+      {!dataLoaded && (
+          <div className="flex justify-center mt-8">
+            <svg className="animate-spin h-8 w-8 text-indigo-500" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" fill="none"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+          </div>
+        )
+      }
+
+      {/* Footer */}
+      {dataLoaded && 
+        <div className="text-center mt-8">
+          built by <a className="text-indigo-500" href="https://www.ishanshah.me/" target="_blank">ishan</a>.
+          summaries by <a className="text-indigo-500" href="https://platform.openai.com/docs/models/gpt-3-5" target="_blank">gpt-3.5</a>.
+        </div>
+      }
     </div>
   )
 }

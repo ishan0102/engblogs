@@ -23,6 +23,7 @@ def parse_date(date_string):
         "%a, %d %b %Y %H:%M:%S %Z",  # Format like 'Tue, 20 Jun 2023 00:00:00 GMT'
         "%a, %d %b %Y %H:%M:%S %z",  # Format like 'Wed, 08 Mar 2023 00:00:00 +0000'
         "%Y-%m-%dT%H:%M:%S.%f%z",  # Format like '2023-07-06T12:50:00.000-07:00'
+        "%Y-%m-%d %H:%M:%S",  # Format like '2023-06-29 16:30:00'
     ]
     for fmt in formats:
         try:
