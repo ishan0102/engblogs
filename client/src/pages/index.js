@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js'
 import Select from 'react-select';
+import filterCompanyOptions from '../data/filterOptions';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_KEY;
@@ -78,27 +79,48 @@ function Pagination({ page, totalPages, setPage }) {
 }
 
 function Filter({ onFilterChange }) {
-  const handleFilterChange = (event) => {
-    const filterValue = event.target.value;
-    console.log(filterValue);
-    onFilterChange(filterValue);
+  // const handleFilterChange = (selectedOptions) => {
+  //   const selectedValues = selectedOptions.map((option) => option.value);
+  //   onFilterChange(selectedValues);
+  // };
+
+  const [filterOptions, setFilterOptions] = useState([]);
+  const [isFilterSelectionComplete, setIsFilterSelectionComplete] = useState(false);
+
+  const handleFilterChange = (selectedOptions) => {
+    setFilterOptions(selectedOptions);
   };
 
+  const handleApplyFilter = () => {
+    const selectedValues = filterOptions.map((option) => option.value);
+    onFilterChange(selectedValues.sort());
+  };
+
+  useEffect(() => {
+    if (filterOptions.length === 0){
+      handleApplyFilter();
+    }
+    setIsFilterSelectionComplete(filterOptions.length > 0);
+  }, [filterOptions]);
+
+
   return (
-    <div className="mt-4 mb-6 text-center">
+    <div className="flex justify-center mt-6 mb-4">
       <label htmlFor="filter" className="mr-2 font-medium">
         Filter posts by:
       </label>
-      <select
+      <Select 
         id="filter"
         className="border border-gray-300 rounded px-2 py-1"
+        options={filterCompanyOptions}
+        isMulti
         onChange={handleFilterChange}
-      >
-        <option value="">All</option>
-        <option value="Company 10">Company 10</option>
-        <option value="Company 20">Company 20</option>
-        {/* Add more options based on your requirements */}
-      </select>
+      />
+      {isFilterSelectionComplete && (
+        <button onClick={handleApplyFilter} className="ml-2 bg-indigo-500 text-white px-4 py-2 rounded">
+          Apply
+        </button>
+      )}
     </div>
   );
 }
@@ -117,34 +139,37 @@ export default function Home() {
   const [page, setPage] = useState(getSessionPage());
   const [totalPages, setTotalPages] = useState(0);
   const [dataLoaded, setDataLoaded] = useState(false);
-    const [filter, setFilter] = useState('');
+  const [filters, setFilters] = useState([]);
 
   const handleFilterChange = (filterValue) => {
-    console.log("should trigger useEffect... again by resetting page to zero...");
-    console.log("Filter value:", filterValue);
-
-    setFilter(filterValue);
+    setFilters(filterValue);
     setPage(0); // Reset page when filter changes to display results from the first page
   };
 
   // Fetching
   const fetchPosts = async (pageNumber) => {
     // Check if posts are already stored in cache
-    console.log("Triggering databse call...")
-    console.log("Filtering with:", filter);
-    const cachedPosts = sessionStorage.getItem(`posts-${pageNumber}`);
-    const cachedTotalPages = sessionStorage.getItem('totalPages');
+    const cachedPosts = sessionStorage.getItem(`posts-${pageNumber}-${filters.join('-')}`);
+    const cachedTotalPages = sessionStorage.getItem(`totalPages-with-filters-${filters.join('-')}`);
   
     if (cachedPosts && cachedTotalPages) {
       setBlogPostsList(JSON.parse(cachedPosts));
       setTotalPages(parseInt(cachedTotalPages));
       setDataLoaded(true);
     } else {
-      let { count, data: posts, error } = await supabase
+
+      // Query 'posts' table
+      let query = supabase
         .from('posts')
         .select("*", { count: "exact" })
-        .order('published_at', { ascending: false })
-        .range(pageNumber * POSTS_PER_PAGE, (pageNumber + 1) * POSTS_PER_PAGE - 1);
+        .order('published_at', { ascending: false });
+      
+        // Filter results
+      if (filters.length > 0){
+        query = query.in('company', filters);
+      }
+
+      let { count, data: posts, error } = await query.range(pageNumber * POSTS_PER_PAGE, (pageNumber + 1) * POSTS_PER_PAGE - 1);
   
       if (error) {
         console.error("Error fetching posts:", error);
@@ -156,8 +181,8 @@ export default function Home() {
         setDataLoaded(true);
   
         // Store posts and totalPages in cache
-        sessionStorage.setItem(`posts-${pageNumber}`, JSON.stringify(posts));
-        sessionStorage.setItem('totalPages', totalPages.toString());
+        sessionStorage.setItem(`posts-${pageNumber}-${filters.join('-')}`, JSON.stringify(posts));
+        sessionStorage.setItem(`totalPages-with-filters-${filters.join('-')}`, totalPages.toString());
       }
     }
   };
@@ -165,54 +190,46 @@ export default function Home() {
   useEffect(() => {
     fetchPosts(page);
     sessionStorage.setItem("currentPage", page);
-  }, [page]);
+  }, [page, filters]);
 
   // Prefetching
-  const prefetchPosts = async (pageNumber) => {
-    const cachedPosts = sessionStorage.getItem(`posts-${pageNumber}`);
+  const prefetchPosts = async (pageNumber, filters) => {
+    const cachedPosts = sessionStorage.getItem(`posts-${pageNumber}-${filters.join('-')}`);
     
     // If we have the data in the cache, no need to prefetch
     if (cachedPosts) return;
     
-    let { count, data: posts, error } = await supabase
-      .from('posts')
-      .select("*", { count: "exact" })
-      .order('published_at', { ascending: false })
-      .range(pageNumber * POSTS_PER_PAGE, (pageNumber + 1) * POSTS_PER_PAGE - 1);
+    let query = supabase
+        .from('posts')
+        .select("*", { count: "exact" })
+        .order('published_at', { ascending: false });
+      
+        // Filter results
+      if (filters.length > 0){
+        query = query.in('company', filters);
+      }
 
-    // Apply filter if a filter value is selected
-    if (filter) {
-      console.log("Inside company filtering-", filter);
-      query = query.eq('company', filter);
-    }
+    let { count, data: posts, error } = await query.range(pageNumber * POSTS_PER_PAGE, (pageNumber + 1) * POSTS_PER_PAGE - 1);
 
-    const { count, data: posts, error } = await query;
-
-    if (error) console.error("Error fetching posts:", error);
-    else {
-      setBlogPostsList(posts);
-      setTotalPages(Math.ceil(count / POSTS_PER_PAGE));
-
-  
     if (error) {
-      console.error("Error prefetching posts:", error);
+      console.error("Error fetching posts:", error);
     } else {
       // Store posts in cache
-      // sessionStorage.setItem(`posts-${pageNumber}`, JSON.stringify(posts));
+      sessionStorage.setItem(`posts-${pageNumber}-${filters.join('-')}`, JSON.stringify(posts));
     }
   };
 
   useEffect(() => {
     const nextPage = page + 1;
     if (nextPage < totalPages) {
-      prefetchPosts(nextPage);
+      prefetchPosts(nextPage, filters);
     }
   
     const prevPage = page - 1;
     if (prevPage >= 0) {
-      prefetchPosts(prevPage);
+      prefetchPosts(prevPage, filters);
     }
-  }, [page, totalPages]);
+  }, [page, totalPages, filters]);
 
   return (
     <div className="font-berkeley m-8 md:m-10 pb-20">
