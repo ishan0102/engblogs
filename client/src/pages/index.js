@@ -46,7 +46,7 @@ function Pagination({ page, totalPages, setPage }) {
       <button
         onClick={() => setPage(page - 1)}
         disabled={page === 0}
-        className="px-1 py-2 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
+        className="px-1 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
       >
         <svg width="32" height="32" fill="none" viewBox="0 0 24 24">
           <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13.25 8.75L9.75 12L13.25 15.25"></path>
@@ -59,7 +59,7 @@ function Pagination({ page, totalPages, setPage }) {
           onChange={handleChange}
           options={options}
           isSearchable={false}
-          className="my-1 rounded text-black"
+          className="rounded text-black"
           menuPlacement="auto"
         />
       </div>
@@ -67,7 +67,7 @@ function Pagination({ page, totalPages, setPage }) {
       <button
         onClick={() => setPage(page + 1)}
         disabled={page === totalPages - 1}
-        className="px-1 py-2 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
+        className="px-1 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
       >
         <svg width="32" height="32" fill="none" viewBox="0 0 24 24">
           <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10.75 8.75L14.25 12L10.75 15.25"></path>
@@ -119,15 +119,15 @@ function Filter({ onFilterChange }) {
 
   return (
     <div className="flex justify-center mt-6 mb-4">
-      <label htmlFor="filter" className="mr-2 font-medium">
-        Filter posts by:
-      </label>
       <Select 
-        id="filter"
-        className="border border-gray-300 rounded px-2 py-1"
         options={companyOptions}
-        isMulti
         onChange={handleFilterChange}
+        isMulti
+        closeMenuOnSelect={false}
+        controlShouldRenderValue={false}
+        hideSelectedOptions={false}
+        placeholder="Filter"
+        className="w-full"
       />
       {isFilterSelectionComplete && (
         <button onClick={handleApplyFilter} className="ml-2 bg-indigo-500 text-white px-4 py-2 rounded">
@@ -258,11 +258,13 @@ export default function Home() {
         </a>
       </div>
 
-      {/* Filter */}
-      <Filter onFilterChange={handleFilterChange} />
+      {/* Top Pagination and Filter */}
+      <div className="flex justify-between">
+        {dataLoaded && <Pagination page={page} totalPages={totalPages} setPage={setPage} />}
+        <Filter onFilterChange={handleFilterChange} />
+      </div>
 
       {/* Content */}
-      {dataLoaded && <Pagination page={page} totalPages={totalPages} setPage={setPage} />}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {blogPostsList.map((post, index) => (
           <BlogPost
@@ -276,6 +278,8 @@ export default function Home() {
           />
         ))}
       </div>
+
+      {/* Bottom Pagination */}
       {dataLoaded && <Pagination page={page} totalPages={totalPages} setPage={setPage} />}
 
       {/* Loading */}
