@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js'
 import Select from 'react-select';
-import filterCompanyOptions from '../data/filterOptions';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_KEY;
@@ -13,7 +12,7 @@ const POSTS_PER_PAGE = 12;
 function BlogPost({ title, published_at, link, summary, company }) {
   return (
     <Link href={link} rel="noopener noreferrer" target="_blank"
-      className="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden md:max-w-2xl m-3 border border-gray-200 hover:border-indigo-500 transition"
+      className="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden md:max-w-2xl m-1 border border-gray-200 hover:border-indigo-500 transition"
     >
       <div className="md:flex">
         <div className="p-8">
@@ -79,11 +78,7 @@ function Pagination({ page, totalPages, setPage }) {
 }
 
 function Filter({ onFilterChange }) {
-  // const handleFilterChange = (selectedOptions) => {
-  //   const selectedValues = selectedOptions.map((option) => option.value);
-  //   onFilterChange(selectedValues);
-  // };
-
+  const [companyOptions, setCompanyOptions] = useState([]);
   const [filterOptions, setFilterOptions] = useState([]);
   const [isFilterSelectionComplete, setIsFilterSelectionComplete] = useState(false);
 
@@ -103,6 +98,24 @@ function Filter({ onFilterChange }) {
     setIsFilterSelectionComplete(filterOptions.length > 0);
   }, [filterOptions]);
 
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      let { data: companies, error } = await supabase
+        .from('links')
+        .select('company')
+        .order('company', { ascending: true });
+    
+      if (error) {
+        console.error('Error fetching companies:', error);
+      } else {
+        // Transform companies data to match the format needed by the Select component
+        const companyOptions = companies.map((company) => ({ value: company.company, label: company.company }));
+        setCompanyOptions(companyOptions);
+      }
+    };
+    
+    fetchCompanies();
+  }, []);
 
   return (
     <div className="flex justify-center mt-6 mb-4">
@@ -112,7 +125,7 @@ function Filter({ onFilterChange }) {
       <Select 
         id="filter"
         className="border border-gray-300 rounded px-2 py-1"
-        options={filterCompanyOptions}
+        options={companyOptions}
         isMulti
         onChange={handleFilterChange}
       />
@@ -157,14 +170,13 @@ export default function Home() {
       setTotalPages(parseInt(cachedTotalPages));
       setDataLoaded(true);
     } else {
-
       // Query 'posts' table
       let query = supabase
         .from('posts')
         .select("*", { count: "exact" })
         .order('published_at', { ascending: false });
       
-        // Filter results
+      // Filter results
       if (filters.length > 0){
         query = query.in('company', filters);
       }
