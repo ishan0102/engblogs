@@ -44,9 +44,12 @@ function Pagination({ page, totalPages, setPage }) {
   return (
     <div className="flex justify-center mt-6 mb-4">
       <button
-        onClick={() => setPage(page - 1)}
+        onClick={() => {
+          setPage(page - 1);
+          window.scrollTo(0, 0);
+        }}
         disabled={page === 0}
-        className="px-1 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
+        className="bg-indigo-500 text-white rounded disabled:opacity-50"
       >
         <svg width="32" height="32" fill="none" viewBox="0 0 24 24">
           <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13.25 8.75L9.75 12L13.25 15.25"></path>
@@ -55,6 +58,7 @@ function Pagination({ page, totalPages, setPage }) {
 
       <div className="px-2 mx-1">
         <Select
+          instanceId="pagination"
           value={{ value: page + 1, label: page + 1 }}
           onChange={handleChange}
           options={options}
@@ -65,9 +69,12 @@ function Pagination({ page, totalPages, setPage }) {
       </div>
 
       <button
-        onClick={() => setPage(page + 1)}
+        onClick={() => {
+          setPage(page + 1);
+          window.scrollTo(0, 0);
+        }}
         disabled={page === totalPages - 1}
-        className="px-1 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
+        className="bg-indigo-500 text-white rounded disabled:opacity-50"
       >
         <svg width="32" height="32" fill="none" viewBox="0 0 24 24">
           <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10.75 8.75L14.25 12L10.75 15.25"></path>
@@ -79,24 +86,13 @@ function Pagination({ page, totalPages, setPage }) {
 
 function Filter({ onFilterChange }) {
   const [companyOptions, setCompanyOptions] = useState([]);
-  const [filterOptions, setFilterOptions] = useState([]);
-  const [isFilterSelectionComplete, setIsFilterSelectionComplete] = useState(false);
+  const [selectedCompanies, setSelectedCompanies] = useState([]);
 
-  const handleFilterChange = (selectedOptions) => {
-    setFilterOptions(selectedOptions);
-  };
-
-  const handleApplyFilter = () => {
-    const selectedValues = filterOptions.map((option) => option.value);
+  const handleOptionsChange = async (selectedOptions) => {
+    const selectedValues = selectedOptions.map(option => option.value);
+    setSelectedCompanies(selectedValues);
     onFilterChange(selectedValues.sort());
   };
-
-  useEffect(() => {
-    if (filterOptions.length === 0){
-      handleApplyFilter();
-    }
-    setIsFilterSelectionComplete(filterOptions.length > 0);
-  }, [filterOptions]);
 
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -104,14 +100,14 @@ function Filter({ onFilterChange }) {
         .from('links')
         .select('company')
         .order('company', { ascending: true });
-    
+
       if (error) {
         console.error('Error fetching companies:', error);
-      } else {
-        // Transform companies data to match the format needed by the Select component
-        const companyOptions = companies.map((company) => ({ value: company.company, label: company.company }));
-        setCompanyOptions(companyOptions);
+        return;
       }
+      
+      const formattedCompanies = companies.map(company => ({ value: company.company, label: company.company }));
+      setCompanyOptions(formattedCompanies);
     };
     
     fetchCompanies();
@@ -119,24 +115,20 @@ function Filter({ onFilterChange }) {
 
   return (
     <div className="flex justify-center mt-6 mb-4">
-      <Select 
+      <Select
+        instanceId="filter"
         options={companyOptions}
-        onChange={handleFilterChange}
+        onChange={handleOptionsChange}
         isMulti
         closeMenuOnSelect={false}
         controlShouldRenderValue={false}
         hideSelectedOptions={false}
-        placeholder="Filter"
-        className="w-full"
+        placeholder={selectedCompanies.length === 0 ? `filter by company` : selectedCompanies.length === 1 ? `${selectedCompanies.length} company selected` : `${selectedCompanies.length} companies selected`}
       />
-      {isFilterSelectionComplete && (
-        <button onClick={handleApplyFilter} className="ml-2 bg-indigo-500 text-white px-4 py-2 rounded">
-          Apply
-        </button>
-      )}
     </div>
   );
 }
+
 
 function getSessionPage() {
   if (typeof window !== 'undefined') {
@@ -162,10 +154,10 @@ export default function Home() {
   // Fetching
   const fetchPosts = async (pageNumber) => {
     // Check if posts are already stored in cache
-    const cachedPosts = sessionStorage.getItem(`posts-${pageNumber}-${filters.join('-')}`);
-    const cachedTotalPages = sessionStorage.getItem(`totalPages-with-filters-${filters.join('-')}`);
+    const cachedPosts = sessionStorage.getItem(`posts-${pageNumber}`);
+    const cachedTotalPages = sessionStorage.getItem("totalPages");
   
-    if (cachedPosts && cachedTotalPages) {
+    if (cachedPosts && cachedTotalPages && filters.length === 0) {
       setBlogPostsList(JSON.parse(cachedPosts));
       setTotalPages(parseInt(cachedTotalPages));
       setDataLoaded(true);
@@ -174,7 +166,9 @@ export default function Home() {
       let query = supabase
         .from('posts')
         .select("*", { count: "exact" })
-        .order('published_at', { ascending: false });
+        .order('published_at', { ascending: false })
+        .order('id', { ascending: false });
+
       
       // Filter results
       if (filters.length > 0){
@@ -193,8 +187,10 @@ export default function Home() {
         setDataLoaded(true);
   
         // Store posts and totalPages in cache
-        sessionStorage.setItem(`posts-${pageNumber}-${filters.join('-')}`, JSON.stringify(posts));
-        sessionStorage.setItem(`totalPages-with-filters-${filters.join('-')}`, totalPages.toString());
+        if (filters.length === 0) {
+          sessionStorage.setItem(`posts-${pageNumber}`, JSON.stringify(posts));
+          sessionStorage.setItem("totalPages", totalPages);
+        }
       }
     }
   };
@@ -206,7 +202,7 @@ export default function Home() {
 
   // Prefetching
   const prefetchPosts = async (pageNumber, filters) => {
-    const cachedPosts = sessionStorage.getItem(`posts-${pageNumber}-${filters.join('-')}`);
+    const cachedPosts = sessionStorage.getItem(`posts-${pageNumber}`);
     
     // If we have the data in the cache, no need to prefetch
     if (cachedPosts) return;
@@ -227,7 +223,7 @@ export default function Home() {
       console.error("Error fetching posts:", error);
     } else {
       // Store posts in cache
-      sessionStorage.setItem(`posts-${pageNumber}-${filters.join('-')}`, JSON.stringify(posts));
+      sessionStorage.setItem(`posts-${pageNumber}`, JSON.stringify(posts));
     }
   };
 
@@ -258,11 +254,11 @@ export default function Home() {
         </a>
       </div>
 
-      {/* Top Pagination and Filter */}
-      <div className="flex justify-between">
-        {dataLoaded && <Pagination page={page} totalPages={totalPages} setPage={setPage} />}
-        <Filter onFilterChange={handleFilterChange} />
-      </div>
+      {/* Filter */}
+      <Filter onFilterChange={handleFilterChange} />
+
+      {/* Top Pagination */}
+      {dataLoaded && <Pagination page={page} totalPages={totalPages} setPage={setPage} />}
 
       {/* Content */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
