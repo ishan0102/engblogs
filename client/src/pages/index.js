@@ -1,81 +1,15 @@
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js'
-import Select from 'react-select';
+
+import BlogPost from '../components/BlogPost';
+import Pagination from '../components/Pagination';
+import Filter from '../components/Filter';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const POSTS_PER_PAGE = 12;
-
-function BlogPost({ title, published_at, link, summary, company }) {
-  return (
-    <Link href={link} rel="noopener noreferrer" target="_blank"
-      className="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden md:max-w-2xl m-3 border border-gray-200 hover:border-indigo-500 transition"
-    >
-      <div className="md:flex">
-        <div className="p-8">
-          <div className="flex justify-between items-center">
-            <div className="tracking-wide text-sm text-indigo-500 font-semibold">{company}</div>
-            <div className="uppercase tracking-wide text-sm">{published_at}</div>
-          </div>
-          <div className="block mt-1 text-lg leading-tight font-medium">
-            {title}
-          </div>
-          <p className="mt-2 text-gray-500">
-            {summary}
-            {summary.slice(-1) !== "." && "."}
-          </p>
-        </div>
-      </div>
-    </Link>
-  )
-}
-
-function Pagination({ page, totalPages, setPage }) {
-  const handleChange = selectedOption => {
-    setPage(selectedOption.value - 1);
-    window.scrollTo(0, 0);
-  };
-
-  const options = Array.from({ length: totalPages }, (_, i) => ({ value: i + 1, label: i + 1 }));
-
-  return (
-    <div className="flex justify-center mt-6 mb-4">
-      <button
-        onClick={() => setPage(page - 1)}
-        disabled={page === 0}
-        className="px-1 py-2 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
-      >
-        <svg width="32" height="32" fill="none" viewBox="0 0 24 24">
-          <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13.25 8.75L9.75 12L13.25 15.25"></path>
-        </svg>
-      </button>
-
-      <div className="px-2 mx-1">
-        <Select
-          value={{ value: page + 1, label: page + 1 }}
-          onChange={handleChange}
-          options={options}
-          isSearchable={false}
-          className="my-1 rounded text-black"
-          menuPlacement="auto"
-        />
-      </div>
-
-      <button
-        onClick={() => setPage(page + 1)}
-        disabled={page === totalPages - 1}
-        className="px-1 py-2 mx-1 bg-indigo-500 text-white rounded disabled:opacity-50"
-      >
-        <svg width="32" height="32" fill="none" viewBox="0 0 24 24">
-          <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10.75 8.75L14.25 12L10.75 15.25"></path>
-        </svg>
-      </button>
-    </div>
-  )
-}
 
 function getSessionPage() {
   if (typeof window !== 'undefined') {
@@ -91,23 +25,38 @@ export default function Home() {
   const [page, setPage] = useState(getSessionPage());
   const [totalPages, setTotalPages] = useState(0);
   const [dataLoaded, setDataLoaded] = useState(false);
-  
+  const [filters, setFilters] = useState([]);
+
+  const handleFilterChange = (filterValue) => {
+    setFilters(filterValue);
+    setPage(0); // Reset page when filter changes to display results from the first page
+  };
+
   // Fetching
   const fetchPosts = async (pageNumber) => {
     // Check if posts are already stored in cache
     const cachedPosts = sessionStorage.getItem(`posts-${pageNumber}`);
-    const cachedTotalPages = sessionStorage.getItem('totalPages');
+    const cachedTotalPages = sessionStorage.getItem("totalPages");
   
-    if (cachedPosts && cachedTotalPages) {
+    if (cachedPosts && cachedTotalPages && filters.length === 0) {
       setBlogPostsList(JSON.parse(cachedPosts));
       setTotalPages(parseInt(cachedTotalPages));
       setDataLoaded(true);
     } else {
-      let { count, data: posts, error } = await supabase
+      // Query 'posts' table
+      let query = supabase
         .from('posts')
         .select("*", { count: "exact" })
         .order('published_at', { ascending: false })
-        .range(pageNumber * POSTS_PER_PAGE, (pageNumber + 1) * POSTS_PER_PAGE - 1);
+        .order('id', { ascending: false });
+
+      
+      // Filter results
+      if (filters.length > 0){
+        query = query.in('company', filters);
+      }
+
+      let { count, data: posts, error } = await query.range(pageNumber * POSTS_PER_PAGE, (pageNumber + 1) * POSTS_PER_PAGE - 1);
   
       if (error) {
         console.error("Error fetching posts:", error);
@@ -119,8 +68,10 @@ export default function Home() {
         setDataLoaded(true);
   
         // Store posts and totalPages in cache
-        sessionStorage.setItem(`posts-${pageNumber}`, JSON.stringify(posts));
-        sessionStorage.setItem('totalPages', totalPages.toString());
+        if (filters.length === 0) {
+          sessionStorage.setItem(`posts-${pageNumber}`, JSON.stringify(posts));
+          sessionStorage.setItem("totalPages", totalPages);
+        }
       }
     }
   };
@@ -128,23 +79,29 @@ export default function Home() {
   useEffect(() => {
     fetchPosts(page);
     sessionStorage.setItem("currentPage", page);
-  }, [page]);
+  }, [page, filters]);
 
   // Prefetching
-  const prefetchPosts = async (pageNumber) => {
+  const prefetchPosts = async (pageNumber, filters) => {
     const cachedPosts = sessionStorage.getItem(`posts-${pageNumber}`);
     
     // If we have the data in the cache, no need to prefetch
     if (cachedPosts) return;
     
-    let { count, data: posts, error } = await supabase
-      .from('posts')
-      .select("*", { count: "exact" })
-      .order('published_at', { ascending: false })
-      .range(pageNumber * POSTS_PER_PAGE, (pageNumber + 1) * POSTS_PER_PAGE - 1);
-  
+    let query = supabase
+        .from('posts')
+        .select("*", { count: "exact" })
+        .order('published_at', { ascending: false });
+      
+        // Filter results
+      if (filters.length > 0){
+        query = query.in('company', filters);
+      }
+
+    let { count, data: posts, error } = await query.range(pageNumber * POSTS_PER_PAGE, (pageNumber + 1) * POSTS_PER_PAGE - 1);
+
     if (error) {
-      console.error("Error prefetching posts:", error);
+      console.error("Error fetching posts:", error);
     } else {
       // Store posts in cache
       sessionStorage.setItem(`posts-${pageNumber}`, JSON.stringify(posts));
@@ -154,14 +111,14 @@ export default function Home() {
   useEffect(() => {
     const nextPage = page + 1;
     if (nextPage < totalPages) {
-      prefetchPosts(nextPage);
+      prefetchPosts(nextPage, filters);
     }
   
     const prevPage = page - 1;
     if (prevPage >= 0) {
-      prefetchPosts(prevPage);
+      prefetchPosts(prevPage, filters);
     }
-  }, [page, totalPages]);
+  }, [page, totalPages, filters]);
 
   return (
     <div className="font-berkeley m-8 md:m-10 pb-20">
@@ -178,8 +135,13 @@ export default function Home() {
         </a>
       </div>
 
-      {/* Content */}
+      {/* Filter */}
+      <Filter onFilterChange={handleFilterChange} supabase={supabase} />
+
+      {/* Top Pagination */}
       {dataLoaded && <Pagination page={page} totalPages={totalPages} setPage={setPage} />}
+
+      {/* Content */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {blogPostsList.map((post, index) => (
           <BlogPost
@@ -193,6 +155,8 @@ export default function Home() {
           />
         ))}
       </div>
+
+      {/* Bottom Pagination */}
       {dataLoaded && <Pagination page={page} totalPages={totalPages} setPage={setPage} />}
 
       {/* Loading */}
