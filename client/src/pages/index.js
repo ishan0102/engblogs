@@ -151,10 +151,12 @@ export default function Home() {
       </div>
 
       {/* Filter */}
-      <div className='flex justify-center gap-4'>
-        <Filter onFilterChange={handleFilterChange} supabase={supabase} />
-        <Search onSearch={handleSearch} />
-      </div>
+      {dataLoaded &&
+        <div className='flex justify-center gap-4'>
+          <Filter onFilterChange={handleFilterChange} supabase={supabase} />
+          <Search onSearch={handleSearch} />
+        </div>
+      }
 
       {/* Top Pagination */}
       {dataLoaded && <Pagination page={page} totalPages={totalPages} setPage={setPage} />}

@@ -58,6 +58,7 @@ please do! run `npm run dev` in the `client` folder to start the webapp. the `sc
 | Netflix                | [https://netflixtechblog.com/feed](https://netflixtechblog.com/feed)                                |
 | OpenAI                 | [https://openai.com/blog/rss](https://openai.com/blog/rss)                                |
 | Pinterest              | [https://medium.com/feed/@Pinterest_Engineering](https://medium.com/feed/@Pinterest_Engineering)                                |
+| Roblox                 | [https://corp.roblox.com/feed/](https://corp.roblox.com/feed/)                                |
 | Salesforce             | [https://engineering.salesforce.com/feed](https://engineering.salesforce.com/feed)                                |
 | Snorkel AI             | [https://snorkel.ai/feed](https://snorkel.ai/feed)                                |
 | SoundCloud             | [https://developers.soundcloud.com/blog/blog.rss](https://developers.soundcloud.com/blog/blog.rss)                                |
