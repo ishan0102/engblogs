@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import BlogPost from '../components/BlogPost';
 import Pagination from '../components/Pagination';
 import Filter from '../components/Filter';
+import Search from '../components/Search';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_KEY;
@@ -26,10 +27,16 @@ export default function Home() {
   const [totalPages, setTotalPages] = useState(0);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [filters, setFilters] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleFilterChange = (filterValue) => {
     setFilters(filterValue);
     setPage(0); // Reset page when filter changes to display results from the first page
+  };
+
+  const handleSearch = (searchString) => {
+    setSearchTerm(searchString);
+    setPage(0);
   };
 
   // Fetching
@@ -37,8 +44,8 @@ export default function Home() {
     // Check if posts are already stored in cache
     const cachedPosts = sessionStorage.getItem(`posts-${pageNumber}`);
     const cachedTotalPages = sessionStorage.getItem("totalPages");
-  
-    if (cachedPosts && cachedTotalPages && filters.length === 0) {
+
+    if (cachedPosts && cachedTotalPages && filters.length === 0 && searchTerm.length === 0) {
       setBlogPostsList(JSON.parse(cachedPosts));
       setTotalPages(parseInt(cachedTotalPages));
       setDataLoaded(true);
@@ -50,25 +57,29 @@ export default function Home() {
         .order('published_at', { ascending: false })
         .order('id', { ascending: false });
 
-      
       // Filter results
-      if (filters.length > 0){
+      if (filters.length > 0) {
         query = query.in('company', filters);
       }
 
+      //Search
+      if (searchTerm.length > 0) {
+        query = query.or(`description.ilike.%${searchTerm}%, title.ilike.%${searchTerm}%`);
+      }
+
       let { count, data: posts, error } = await query.range(pageNumber * POSTS_PER_PAGE, (pageNumber + 1) * POSTS_PER_PAGE - 1);
-  
+
       if (error) {
         console.error("Error fetching posts:", error);
       } else {
         setBlogPostsList(posts);
-  
+
         const totalPages = Math.ceil(count / POSTS_PER_PAGE);
         setTotalPages(totalPages);
         setDataLoaded(true);
-  
+
         // Store posts and totalPages in cache
-        if (filters.length === 0) {
+        if (filters.length === 0 && searchTerm.length === 0) {
           sessionStorage.setItem(`posts-${pageNumber}`, JSON.stringify(posts));
           sessionStorage.setItem("totalPages", totalPages);
         }
@@ -79,24 +90,28 @@ export default function Home() {
   useEffect(() => {
     fetchPosts(page);
     sessionStorage.setItem("currentPage", page);
-  }, [page, filters]);
+  }, [page, filters, searchTerm]);
 
   // Prefetching
   const prefetchPosts = async (pageNumber, filters) => {
     const cachedPosts = sessionStorage.getItem(`posts-${pageNumber}`);
-    
+
     // If we have the data in the cache, no need to prefetch
     if (cachedPosts) return;
-    
+
     let query = supabase
-        .from('posts')
-        .select("*", { count: "exact" })
-        .order('published_at', { ascending: false });
-      
-        // Filter results
-      if (filters.length > 0){
-        query = query.in('company', filters);
-      }
+      .from('posts')
+      .select("*", { count: "exact" })
+      .order('published_at', { ascending: false });
+
+    // Filter results
+    if (filters.length > 0) {
+      query = query.in('company', filters);
+    }
+    // Search 
+    if (searchTerm.length > 0) {
+      query = query.or(`description.ilike.%${searchTerm}%, title.ilike.%${searchTerm}%`);
+    }
 
     let { count, data: posts, error } = await query.range(pageNumber * POSTS_PER_PAGE, (pageNumber + 1) * POSTS_PER_PAGE - 1);
 
@@ -113,12 +128,12 @@ export default function Home() {
     if (nextPage < totalPages) {
       prefetchPosts(nextPage, filters);
     }
-  
+
     const prevPage = page - 1;
     if (prevPage >= 0) {
       prefetchPosts(prevPage, filters);
     }
-  }, [page, totalPages, filters]);
+  }, [page, totalPages, filters, searchTerm]);
 
   return (
     <div className="font-berkeley m-8 md:m-10 pb-20">
@@ -136,7 +151,10 @@ export default function Home() {
       </div>
 
       {/* Filter */}
-      <Filter onFilterChange={handleFilterChange} supabase={supabase} />
+      <div className='flex justify-center gap-4'>
+        <Filter onFilterChange={handleFilterChange} supabase={supabase} />
+        <Search onSearch={handleSearch} />
+      </div>
 
       {/* Top Pagination */}
       {dataLoaded && <Pagination page={page} totalPages={totalPages} setPage={setPage} />}
@@ -161,17 +179,17 @@ export default function Home() {
 
       {/* Loading */}
       {!dataLoaded && (
-          <div className="flex justify-center mt-8">
-            <svg className="animate-spin h-8 w-8 text-indigo-500" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" fill="none"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
-          </div>
-        )
+        <div className="flex justify-center mt-8">
+          <svg className="animate-spin h-8 w-8 text-indigo-500" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" fill="none"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+        </div>
+      )
       }
 
       {/* Footer */}
-      {dataLoaded && 
+      {dataLoaded &&
         <div className="text-center mt-8">
           built by <a className="text-indigo-500" href="https://www.ishanshah.me/" target="_blank">ishan</a>.
           summaries by <a className="text-indigo-500" href="https://platform.openai.com/docs/models/gpt-3-5" target="_blank">gpt-3.5</a>.
