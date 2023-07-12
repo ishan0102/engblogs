@@ -1,134 +1,15 @@
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js'
-import Select from 'react-select';
+
+import BlogPost from '../components/BlogPost';
+import Pagination from '../components/Pagination';
+import Filter from '../components/Filter';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const POSTS_PER_PAGE = 12;
-
-function BlogPost({ title, published_at, link, summary, company }) {
-  return (
-    <Link href={link} rel="noopener noreferrer" target="_blank"
-      className="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden md:max-w-2xl m-1 border border-gray-200 hover:border-indigo-500 transition"
-    >
-      <div className="md:flex">
-        <div className="p-8">
-          <div className="flex justify-between items-center">
-            <div className="tracking-wide text-sm text-indigo-500 font-semibold">{company}</div>
-            <div className="uppercase tracking-wide text-sm">{published_at}</div>
-          </div>
-          <div className="block mt-1 text-lg leading-tight font-medium">
-            {title}
-          </div>
-          <p className="mt-2 text-gray-500">
-            {summary}
-            {summary.slice(-1) !== "." && "."}
-          </p>
-        </div>
-      </div>
-    </Link>
-  )
-}
-
-function Pagination({ page, totalPages, setPage }) {
-  const handleChange = selectedOption => {
-    setPage(selectedOption.value - 1);
-    window.scrollTo(0, 0);
-  };
-
-  const options = Array.from({ length: totalPages }, (_, i) => ({ value: i + 1, label: i + 1 }));
-
-  return (
-    <div className="flex justify-center mt-6 mb-4">
-      <button
-        onClick={() => {
-          setPage(page - 1);
-          window.scrollTo(0, 0);
-        }}
-        disabled={page === 0}
-        className="bg-indigo-500 text-white rounded disabled:opacity-50"
-      >
-        <svg width="32" height="32" fill="none" viewBox="0 0 24 24">
-          <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13.25 8.75L9.75 12L13.25 15.25"></path>
-        </svg>
-      </button>
-
-      <div className="px-2 mx-1">
-        <Select
-          instanceId="pagination"
-          value={{ value: page + 1, label: page + 1 }}
-          onChange={handleChange}
-          options={options}
-          isSearchable={false}
-          className="rounded text-black"
-          menuPlacement="auto"
-        />
-      </div>
-
-      <button
-        onClick={() => {
-          setPage(page + 1);
-          window.scrollTo(0, 0);
-        }}
-        disabled={page === totalPages - 1}
-        className="bg-indigo-500 text-white rounded disabled:opacity-50"
-      >
-        <svg width="32" height="32" fill="none" viewBox="0 0 24 24">
-          <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10.75 8.75L14.25 12L10.75 15.25"></path>
-        </svg>
-      </button>
-    </div>
-  )
-}
-
-function Filter({ onFilterChange }) {
-  const [companyOptions, setCompanyOptions] = useState([]);
-  const [selectedCompanies, setSelectedCompanies] = useState([]);
-
-  const handleOptionsChange = async (selectedOptions) => {
-    const selectedValues = selectedOptions.map(option => option.value);
-    setSelectedCompanies(selectedValues);
-    onFilterChange(selectedValues.sort());
-  };
-
-  useEffect(() => {
-    const fetchCompanies = async () => {
-      let { data: companies, error } = await supabase
-        .from('links')
-        .select('company')
-        .order('company', { ascending: true });
-
-      if (error) {
-        console.error('Error fetching companies:', error);
-        return;
-      }
-      
-      const formattedCompanies = companies.map(company => ({ value: company.company, label: company.company }));
-      setCompanyOptions(formattedCompanies);
-    };
-    
-    fetchCompanies();
-  }, []);
-
-  return (
-    <div className="flex justify-center mt-6 mb-4">
-      <Select
-        instanceId="filter"
-        options={companyOptions}
-        onChange={handleOptionsChange}
-        isMulti
-        closeMenuOnSelect={false}
-        controlShouldRenderValue={false}
-        hideSelectedOptions={false}
-        placeholder={selectedCompanies.length === 0 ? `filter by company` : selectedCompanies.length === 1 ? `${selectedCompanies.length} company selected` : `${selectedCompanies.length} companies selected`}
-      />
-    </div>
-  );
-}
-
 
 function getSessionPage() {
   if (typeof window !== 'undefined') {
@@ -255,7 +136,7 @@ export default function Home() {
       </div>
 
       {/* Filter */}
-      <Filter onFilterChange={handleFilterChange} />
+      <Filter onFilterChange={handleFilterChange} supabase={supabase} />
 
       {/* Top Pagination */}
       {dataLoaded && <Pagination page={page} totalPages={totalPages} setPage={setPage} />}
