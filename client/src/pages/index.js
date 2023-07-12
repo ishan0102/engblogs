@@ -136,7 +136,7 @@ export default function Home() {
       </div>
 
       {/* Filter */}
-      <Filter onFilterChange={handleFilterChange} supabase={supabase} />
+      {dataLoaded && <Filter onFilterChange={handleFilterChange} supabase={supabase} />}
 
       {/* Top Pagination */}
       {dataLoaded && <Pagination page={page} totalPages={totalPages} setPage={setPage} />}
