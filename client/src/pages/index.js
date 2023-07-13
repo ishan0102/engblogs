@@ -64,7 +64,7 @@ export default function Home() {
 
       //Search
       if (searchTerm.length > 0) {
-        query = query.or(`description.ilike.%${searchTerm}%, title.ilike.%${searchTerm}%`);
+        query = query.or(`title.ilike.%${searchTerm}%, description.ilike.%${searchTerm}%, summary.ilike.%${searchTerm}%, company.ilike.%${searchTerm}%`);
       }
 
       let { count, data: posts, error } = await query.range(pageNumber * POSTS_PER_PAGE, (pageNumber + 1) * POSTS_PER_PAGE - 1);
@@ -150,16 +150,25 @@ export default function Home() {
         </a>
       </div>
 
-      {/* Filter */}
-      {dataLoaded &&
-        <div className='flex justify-center gap-4'>
+      {/* Web Navigation - Shown on medium screens and up */}
+      <div className="hidden md:grid grid-cols-3 gap-4 items-center">
+        <div className="justify-self-start">
           <Filter onFilterChange={handleFilterChange} supabase={supabase} />
+        </div>
+        <div className="justify-self-center">
+          <Pagination page={page} totalPages={totalPages} setPage={setPage} />
+        </div>
+        <div className="justify-self-end">
           <Search onSearch={handleSearch} />
         </div>
-      }
+      </div>
 
-      {/* Top Pagination */}
-      {dataLoaded && <Pagination page={page} totalPages={totalPages} setPage={setPage} />}
+      {/* Mobile Navigation - Shown on small screens */}
+      <div className="md:hidden">
+        <Filter onFilterChange={handleFilterChange} supabase={supabase} />
+        <Search onSearch={handleSearch} />
+        <Pagination page={page} totalPages={totalPages} setPage={setPage} />
+      </div>
 
       {/* Content */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">

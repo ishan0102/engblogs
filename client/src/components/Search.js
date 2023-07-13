@@ -16,7 +16,7 @@ export default function Search({ onSearch }) {
     <div className="flex justify-center mt-6 mb-4">
       <input
         id="search"
-        className="border border-stone-300 outline-blue-500 hover:border-gray-400 rounded px-2 py-1.5"
+        className="text-gray-500 border border-gray-300 hover:border-gray-400 placeholder-gray-500 rounded px-2 py-1.5"
         type='text'
         onChange={handleSearchTerm}
         onKeyDown={(event) => {
