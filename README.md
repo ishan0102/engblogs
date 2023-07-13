@@ -35,7 +35,7 @@ please do! run `npm run dev` in the `client` folder to start the webapp. the `sc
 | Berkeley AI            | [https://bair.berkeley.edu/blog/feed.xml](https://bair.berkeley.edu/blog/feed.xml)                            |
 | Chromium               | [http://blog.chromium.org/feeds/posts/default](http://blog.chromium.org/feeds/posts/default)                                |
 | Cohere AI              | [https://txt.cohere.ai/rss/](https://txt.cohere.ai/rss/)                                |
-| Databricks             | [https://www.databricks.com/blog/feed](https://www.databricks.com/blog/feed)               |
+| Databricks             | [https://www.databricks.com/blog/feed](https://www.databricks.com/feed)               |
 | DeepMind               | [https://www.deepmind.com/blog/rss.xml](https://www.deepmind.com/blog/rss.xml)                                |
 | DoorDash               | [https://doordash.engineering/category/backend/feed/](https://doordash.engineering/category/backend/feed/)                                |
 | DoorDash ML            | [https://doordash.engineering/category/data-science-and-machine-learning/feed/](https://doordash.engineering/category/data-science-and-machine-learning/feed/)                                |
