@@ -74,10 +74,14 @@ def parse_feed(url, company):
         print(f"Inserted post: {title} from {company}")
 
         # Create a tweet
-        twitter_client.create_tweet(
-            text=f"{company}: {title}\n\ndate: {published_at}\nlink: {link}",
-        )
-        print(f"Tweeted post: {title} from {company}")
+        try:
+            twitter_client.create_tweet(
+                text=f"{company}: {title}\n\ndate: {published_at}\nlink: {link}",
+            )
+            print(f"Tweeted post: {title} from {company}")
+        except tweepy.errors.TooManyRequests:
+            print("Rate limit exceeded. Skipping tweet.")
+            continue
 
 
 # Fetch existing data from the 'posts' table
