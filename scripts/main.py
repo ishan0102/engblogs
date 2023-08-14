@@ -49,12 +49,8 @@ def parse_feed(url, company):
         published_at = parse_date(entry.published)
         link = entry.link
 
-        # Check if the entry exists in the loaded 'posts' data
-        if any(
-            post
-            for post in existing_posts
-            if post["link"] == link
-        ):
+        # Check if the entry exists in the 'posts' table
+        if supabase.table("posts").select("*").eq("link", link).execute().data:
             print(f"Skipped existing post: {title} from {company}")
             continue
 
@@ -82,11 +78,6 @@ def parse_feed(url, company):
         except tweepy.errors.TooManyRequests:
             print("Rate limit exceeded. Skipping tweet.")
             continue
-
-
-# Fetch existing data from the 'posts' table
-response = supabase.table("posts").select("link").execute()
-existing_posts = response.data
 
 # Fetch companies and links from the 'links' table
 response = supabase.table("links").select("company, link").execute()
