@@ -22,7 +22,7 @@
     /* Apple II Mono */
     @font-face {
         font-family: 'berkeley';
-        src: url('../../public/static/fonts/berkeley.woff') format('truetype');
+        src: url('../../public/static/fonts/berkeley-updated.woff') format('woff');
         font-weight: normal;
         font-style: normal;
     }
