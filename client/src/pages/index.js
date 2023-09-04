@@ -103,7 +103,7 @@ export default function Home() {
       .from('posts')
       .select("*", { count: "exact" })
       .order('published_at', { ascending: false })
-	    order('id', { ascending: false });
+      .order('id', { ascending: false });
 
     // Filter results
     if (filters.length > 0) {
