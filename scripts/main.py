@@ -3,11 +3,11 @@ import os
 
 import feedparser
 import openai
+import tweepy
 from dotenv import load_dotenv
 from supabase import create_client
 from tqdm import tqdm
 
-import tweepy
 from scrape import scrape_post
 from summarize import get_summary
 
@@ -31,7 +31,7 @@ def parse_date(date_string):
         "%a, %d %b %Y %H:%M:%S %z",  # Format like 'Wed, 08 Mar 2023 00:00:00 +0000'
         "%Y-%m-%dT%H:%M:%S.%f%z",  # Format like '2023-07-06T12:50:00.000-07:00'
         "%Y-%m-%d %H:%M:%S",  # Format like '2023-06-29 16:30:00'
-        "%Y-%m-%dT%H:%M:%S%z"  # Format like '2023-09-13T00:00:00+00:00'
+        "%Y-%m-%dT%H:%M:%S%z",  # Format like '2023-09-13T00:00:00+00:00'
     ]
     for fmt in formats:
         try:
@@ -84,6 +84,7 @@ def parse_feed(url, company):
         except tweepy.errors.TooManyRequests:
             print("Rate limit exceeded. Skipping tweet.")
             continue
+
 
 # Fetch companies and links from the 'links' table
 response = supabase.table("links").select("company, link").execute()
