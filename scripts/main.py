@@ -3,11 +3,12 @@ import os
 
 import feedparser
 import openai
+import tweepy
 from dotenv import load_dotenv
 from supabase import create_client
 from tqdm import tqdm
 
-import tweepy
+from scrape import scrape_post
 from summarize import get_summary
 
 load_dotenv()
@@ -30,6 +31,7 @@ def parse_date(date_string):
         "%a, %d %b %Y %H:%M:%S %z",  # Format like 'Wed, 08 Mar 2023 00:00:00 +0000'
         "%Y-%m-%dT%H:%M:%S.%f%z",  # Format like '2023-07-06T12:50:00.000-07:00'
         "%Y-%m-%d %H:%M:%S",  # Format like '2023-06-29 16:30:00'
+        "%Y-%m-%dT%H:%M:%S%z",  # Format like '2023-09-13T00:00:00+00:00'
     ]
     for fmt in formats:
         try:
@@ -57,14 +59,18 @@ def parse_feed(url, company):
         # If the entry is not a duplicate, generate a summary
         summary = get_summary(title, description)
 
+        # Get the full post text
+        full_text = scrape_post(link)
+
         # Insert the new entry into the 'posts' table
         entry_data = {
             "published_at": published_at,
+            "company": company,
             "title": title,
             "link": link,
             "description": description,
             "summary": summary,
-            "company": company,
+            "full_text": full_text,
         }
         supabase.table("posts").insert(entry_data).execute()
         print(f"Inserted post: {title} from {company}")
@@ -78,6 +84,7 @@ def parse_feed(url, company):
         except tweepy.errors.TooManyRequests:
             print("Rate limit exceeded. Skipping tweet.")
             continue
+
 
 # Fetch companies and links from the 'links' table
 response = supabase.table("links").select("company, link").execute()
