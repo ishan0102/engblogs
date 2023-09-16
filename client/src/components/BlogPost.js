@@ -1,6 +1,7 @@
 import Link from 'next/link';
+import Upvote from './Upvote';
 
-export default function BlogPost({ title, published_at, link, summary, company, upvotes }) {
+export default function BlogPost({ post_id, title, published_at, link, summary, company, supabase, ip }) {
   return (
     <div className="relative max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden md:max-w-2xl m-1 border border-gray-200 hover:border-indigo-500 transition">
       <Link href={link} rel="noopener noreferrer" target="_blank">
@@ -19,12 +20,7 @@ export default function BlogPost({ title, published_at, link, summary, company, 
           </div>
         </div>
       </Link>
-      <div className="absolute bottom-6 right-6 flex items-center">
-        <span className="text-gray-500 text-sm mr-2">{upvotes ? upvotes : 0}</span>
-        <button onClick={() => { /* update upvote count in the database */ }} className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-1 px-2 rounded">
-          upvote
-        </button>
-      </div>
+      <Upvote postId={post_id} supabase={supabase} userIP={ip}></Upvote>
     </div>
-  )
+  );
 }

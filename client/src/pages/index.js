@@ -21,13 +21,33 @@ function getSessionPage() {
   }
 }
 
-export default function Home() {
+export async function getServerSideProps(context) {
+  let ip;
+  const { req } = context;
+
+  if (req.headers['x-forwarded-for']) {
+    ip = req.headers['x-forwarded-for'].split(',')[0];
+  } else if (req.headers['x-real-ip']) {
+    ip = req.connection.remoteAddress;
+  } else {
+    ip = req.connection.remoteAddress;
+  }
+
+  return {
+    props: {
+      ip,
+    },
+  };
+}
+
+export default function Home(props) {
   const [blogPostsList, setBlogPostsList] = useState([]);
   const [page, setPage] = useState(getSessionPage());
   const [totalPages, setTotalPages] = useState(0);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [filters, setFilters] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const ip = props.ip;
 
   const handleFilterChange = (filterValue) => {
     setFilters(filterValue);
@@ -176,12 +196,15 @@ export default function Home() {
         {blogPostsList.map((post, index) => (
           <BlogPost
             key={post.id}
+            post_id={post.id}
             title={post.title}
             published_at={post.published_at}
             link={post.link}
             description={post.description}
             summary={post.summary}
             company={post.company}
+            supabase={supabase}
+            ip={ip}
           />
         ))}
       </div>
