@@ -81,10 +81,10 @@ export default function Home(props) {
       if (filters.length > 0) {
         query = query.in('company', filters);
       }
-
-      //Search
+      
+      // Search 
       if (searchTerm.length > 0) {
-        query = query.or(`title.ilike.%${searchTerm}%, description.ilike.%${searchTerm}%, summary.ilike.%${searchTerm}%, full_text.ilike.%${searchTerm}%`);
+        query = query.or(`full_text.ilike.%${searchTerm}%`);
       }
 
       let { count, data: posts, error } = await query.range(pageNumber * POSTS_PER_PAGE, (pageNumber + 1) * POSTS_PER_PAGE - 1);
@@ -129,9 +129,10 @@ export default function Home(props) {
     if (filters.length > 0) {
       query = query.in('company', filters);
     }
+    
     // Search 
     if (searchTerm.length > 0) {
-      query = query.or(`title.ilike.%${searchTerm}%, description.ilike.%${searchTerm}%, summary.ilike.%${searchTerm}%, full_text.ilike.%${searchTerm}%`);
+      query = query.or(`full_text.ilike.%${searchTerm}%`);
     }
 
     let { count, data: posts, error } = await query.range(pageNumber * POSTS_PER_PAGE, (pageNumber + 1) * POSTS_PER_PAGE - 1);
