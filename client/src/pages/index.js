@@ -84,7 +84,7 @@ export default function Home(props) {
 
       //Search
       if (searchTerm.length > 0) {
-        query = query.or(`title.ilike.%${searchTerm}%, description.ilike.%${searchTerm}%, summary.ilike.%${searchTerm}%, company.ilike.%${searchTerm}%`);
+        query = query.or(`title.ilike.%${searchTerm}%, description.ilike.%${searchTerm}%, summary.ilike.%${searchTerm}%, full_text.ilike.%${searchTerm}%`);
       }
 
       let { count, data: posts, error } = await query.range(pageNumber * POSTS_PER_PAGE, (pageNumber + 1) * POSTS_PER_PAGE - 1);
@@ -131,7 +131,7 @@ export default function Home(props) {
     }
     // Search 
     if (searchTerm.length > 0) {
-      query = query.or(`description.ilike.%${searchTerm}%, title.ilike.%${searchTerm}%`);
+      query = query.or(`title.ilike.%${searchTerm}%, description.ilike.%${searchTerm}%, summary.ilike.%${searchTerm}%, full_text.ilike.%${searchTerm}%`);
     }
 
     let { count, data: posts, error } = await query.range(pageNumber * POSTS_PER_PAGE, (pageNumber + 1) * POSTS_PER_PAGE - 1);
