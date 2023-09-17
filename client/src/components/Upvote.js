@@ -30,34 +30,34 @@ export default function Upvote({ postId, supabase, userIP }) {
   }, []);
 
   const handleUpvote = async () => {
-    if (hasUpvoted) {
-      setUpvoteCount(upvoteCount - 1);
-
-      // remove user IP from upvotes
-      const { error } = await supabase
-        .from('upvotes')
-        .delete()
-        .eq('post_id', postId)
-        .eq('ip_address', userIP);
-
-      if (error) {
-        console.error("Error updating upvotes:", error)
+    let newUpvoteCount = hasUpvoted ? upvoteCount - 1 : upvoteCount + 1;
+    let newHasUpvoted = !hasUpvoted;
+  
+    // Optimistically update UI
+    setHasUpvoted(newHasUpvoted);
+    setUpvoteCount(newUpvoteCount);
+  
+    try {
+      if (newHasUpvoted) {
+        const { error } = await supabase
+          .from('upvotes')
+          .insert({ 'post_id': postId, 'ip_address': userIP });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('upvotes')
+          .delete()
+          .eq('post_id', postId)
+          .eq('ip_address', userIP);
+        if (error) throw error;
       }
-
-    } else {
-      setUpvoteCount(upvoteCount + 1);
-
-      // insert upvote
-      const { error } = await supabase
-        .from('upvotes')
-        .insert({ 'post_id': postId, 'ip_address': userIP });
-
-      if (error) {
-        console.error("Error updating upvotes:", error)
-      }
+    } catch (error) {
+      console.error("Error updating upvotes:", error);
+      // Revert optimistic updates
+      setHasUpvoted(hasUpvoted);
+      setUpvoteCount(upvoteCount);
     }
-    setHasUpvoted(!hasUpvoted);
-  };
+  };  
 
   return (
     <div className="absolute bottom-6 right-6 flex items-center">
