@@ -16,7 +16,7 @@ export default function Pagination({ page, totalPages, setPage }) {
           window.scrollTo(0, 0);
         }}
         disabled={page === 0}
-        className="bg-indigo-500 text-white rounded disabled:opacity-50"
+        className="bg-indigo-500 hover:bg-indigo-600 text-white rounded disabled:opacity-50"
       >
         <svg width="32" height="32" fill="none" viewBox="0 0 24 24">
           <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13.25 8.75L9.75 12L13.25 15.25"></path>
@@ -41,7 +41,7 @@ export default function Pagination({ page, totalPages, setPage }) {
           window.scrollTo(0, 0);
         }}
         disabled={page === totalPages - 1}
-        className="bg-indigo-500 text-white rounded disabled:opacity-50"
+        className="bg-indigo-500 hover:bg-indigo-600 text-white rounded disabled:opacity-50"
       >
         <svg width="32" height="32" fill="none" viewBox="0 0 24 24">
           <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10.75 8.75L14.25 12L10.75 15.25"></path>
