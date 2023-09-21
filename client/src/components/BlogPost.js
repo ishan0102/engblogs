@@ -3,8 +3,8 @@ import Upvote from './Upvote';
 
 export default function BlogPost({ post_id, title, published_at, link, summary, company, supabase, ip }) {
   return (
-    <div className="relative max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden md:max-w-2xl m-1 border border-gray-200 hover:border-indigo-500 transition">
-      <Link href={link} rel="noopener noreferrer" target="_blank">
+    <Link href={link} passHref legacyBehavior>
+      <a target="_blank" rel="noopener noreferrer" className="block relative max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden md:max-w-2xl m-1 border border-gray-200 hover:border-indigo-500 transition">
         <div className="md:flex mb-10">
           <div className="p-8">
             <div className="flex justify-between items-center">
@@ -19,8 +19,8 @@ export default function BlogPost({ post_id, title, published_at, link, summary, 
             </p>
           </div>
         </div>
-      </Link>
-      <Upvote postId={post_id} supabase={supabase} userIP={ip}></Upvote>
-    </div>
+        <Upvote postId={post_id} supabase={supabase} userIP={ip} />
+      </a>
+    </Link>
   );
 }

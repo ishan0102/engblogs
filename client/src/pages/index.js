@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js';
 
 import BlogPost from '../components/BlogPost';
 import Pagination from '../components/Pagination';
