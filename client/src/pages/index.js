@@ -219,6 +219,7 @@ export default function Home(props) {
             description={post.description}
             summary={post.summary}
             company={post.company}
+            buzzwords={post.buzzwords}
             supabase={supabase}
             ip={ip}
           />
