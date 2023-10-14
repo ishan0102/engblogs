@@ -9,7 +9,7 @@ from supabase import create_client
 from tqdm import tqdm
 
 from scrape import scrape_post
-from summarize import get_summary, get_buzzwords
+from summarize import get_post_insights
 
 load_dotenv()
 url = os.getenv("SUPABASE_URL")
@@ -58,11 +58,13 @@ def parse_feed(url, company):
 
         # If the entry is not a duplicate, generate a summary and buzzwords
         try:
-            summary = get_summary(title, description)
-            buzzwords = get_buzzwords(title, description)
-
             # Get the full post text
             full_text = scrape_post(link)
+
+            # Get post insights
+            insights = get_post_insights(title, full_text)
+            summary = insights["summary"]
+            buzzwords = insights["buzzwords"]
 
             # Insert the new entry into the 'posts' table
             entry_data = {

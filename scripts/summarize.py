@@ -1,6 +1,4 @@
 import json
-import random
-import time
 
 import openai
 import tiktoken
@@ -24,9 +22,7 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613"):
         tokens_per_message = 3
         tokens_per_name = 1
     elif model == "gpt-3.5-turbo-0301":
-        tokens_per_message = (
-            4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
-        )
+        tokens_per_message = 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
         tokens_per_name = -1  # if there's a name, the role is omitted
     elif "gpt-3.5-turbo" in model:
         # print("Warning: gpt-3.5-turbo may update over time. Returning num tokens assuming gpt-3.5-turbo-0613.")
@@ -49,121 +45,39 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613"):
     return num_tokens
 
 
-def get_summary(title, description, model="gpt-3.5-turbo"):
+def get_post_insights(title, fullText, model="gpt-3.5-turbo"):
     # Set maximum number of tokens
     max_tokens = 4096
 
-    # The initial prompt
-    prompt = f"Create a one line description for a technical blogpost based on the title and description I provide you. You should simply describe what the post is about. Respond only in JSON, using 'summary' as the key. Do not say what you're describing, i.e. don't start with 'this blogpost is about'.\n\nTitle: '{title}'\n\nDescription: '{description}'"
+    # Create a combined prompt for summary and buzzwords
+    prompt = f"Create a one line description for a technical blogpost based on the title and full text I provide you. Also, give me a list of the top 5 most important buzzwords from the same. Respond only in JSON, using 'summary' and 'buzzwords' as the keys. Do not say what you're describing, i.e. don't start with 'this blogpost is about'.\n\nTitle: '{title}'\n\nFull Text: '{fullText}'"
+
     messages = [
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": prompt},
     ]
 
-    # Get the number of tokens in the messages
+    # Get the number of tokens for the message
     num_tokens = num_tokens_from_messages(messages, model=model)
 
-    # Shorten the description until the total number of tokens is less than max_tokens
+    # Shorten the fullText if the total number of tokens exceeds max_tokens
     while num_tokens > max_tokens:
-        # Reduce the description by 10%
-        description = description[: int(len(description) * 0.9)]
-        # Update the prompt with the shortened description
-        prompt = f"Create a one line description for a technical blogpost based on the title and description I provide you. You should simply describe what the post is about. Respond only in JSON, using 'summary' as the key. Do not say what you're describing, i.e. don't start with 'this blogpost is about'.\n\nTitle: '{title}'\n\nDescription: '{description}'"
-        # Update the messages with the new prompt
-        messages = [
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": prompt},
-        ]
-        # Update the number of tokens
+        print("Shortening fullText")
+        fullText = fullText[: int(len(fullText) * 0.9)]
+        prompt = f"Create a one line description for a technical blogpost based on the title and full text I provide you. Also, give me a list of the top 5 most important buzzwords from the same. Respond only in JSON, using 'summary' and 'buzzwords' as the keys. Do not say what you're describing, i.e. don't start with 'this blogpost is about'.\n\nTitle: '{title}'\n\nFull Text: '{fullText}'"
+        messages[-1]["content"] = prompt
         num_tokens = num_tokens_from_messages(messages, model=model)
 
-    # Define the maximum number of retries and the initial delay
-    max_retries = 10
-    delay = 1  # delay is in seconds
+    # Obtain completion for the prompt
+    completion = openai.ChatCompletion.create(model=model, messages=messages)
 
-    for attempt in range(max_retries):
-        try:
-            # Generate the summary
-            completion = openai.ChatCompletion.create(model=model, messages=messages)
-            # If successful, break the loop and continue with the rest of the code
-            break
-        except openai.error.ServiceUnavailableError:
-            # If a ServiceUnavailableError is caught, print a warning and wait
-            print(
-                f"Warning: OpenAI server is overloaded or not ready yet. Retrying in {delay} seconds..."
-            )
-            time.sleep(delay)
-            # Double the delay for the next possible attempt, add some random value to prevent synchronized retries
-            delay *= 2 + random.uniform(0, 1)
-
-    # Get summary from the completion response
-    summary_json = completion.choices[0].message["content"]
+    # Extract results
+    content = completion.choices[0].message["content"]
     try:
-        # The response from the model is a JSON string. Parse it to get the actual summary.
-        summary = json.loads(summary_json)["summary"]
-        print(f"Got summary for {title}: {summary}")
-    except json.JSONDecodeError:
-        print(f"Could not generate summary for {title}")
-        summary = "No summary generated due to decoding error"
-    return summary
-
-def get_buzzwords(title, description, model="gpt-3.5-turbo"):
-    # Set maximum number of tokens
-    max_tokens = 4096
-
-    # The initial prompt
-    prompt = f"Give me a list of the top 5 most important buzzwords based on the title and description provided. Keep the buzzwords 2 words or fewer. Respond on in JSON using 'buzzwords' as the key followed by a list of the buzzwords. \n\nTitle: '{title}'\n\nDescription: '{description}'"
-    messages = [
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": prompt},
-    ]
-
-    # Get the number of tokens in the messages
-    num_tokens = num_tokens_from_messages(messages, model=model)
-
-    # Shorten the description until the total number of tokens is less than max_tokens
-    while num_tokens > max_tokens:
-        # Reduce the text by 10%
-        description = description[: int(len(description) * 0.9)]
-
-        # Update the prompt with the shortened description
-        prompt = f"Give me a list of the top 5 most important buzzwords based on the title and description provided. Keep the buzzwords 2 words or fewer. Respond on in JSON using 'buzzwords' as the key followed by a list of the buzzwords. \n\nTitle: '{title}'\n\nDescription: '{description}'"
-        # Update the messages with the new prompt
-        messages = [
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": prompt},
-        ]
-        # Update the number of tokens
-        num_tokens = num_tokens_from_messages(messages, model=model)
-
-    # Define the maximum number of retries and the initial delay
-    max_retries = 10
-    delay = 1  # delay is in seconds
-
-    for attempt in range(max_retries):
-        try:
-            # Generate the summary
-            completion = openai.ChatCompletion.create(model=model, messages=messages)
-            # If successful, break the loop and continue with the rest of the code
-            break
-        except openai.error.ServiceUnavailableError:
-            # If a ServiceUnavailableError is caught, print a warning and wait
-            print(
-                f"Warning: OpenAI server is overloaded or not ready yet. Retrying in {delay} seconds..."
-            )
-            time.sleep(delay)
-            # Double the delay for the next possible attempt, add some random value to prevent synchronized retries
-            delay *= 2 + random.uniform(0, 1)
-
-    # Get summary from the completion response
-    digest_json = completion.choices[0].message["content"]
-    try:
-        # The response from the model is a JSON string. Parse it to get the actual summary.
-        buzzwords = json.loads(digest_json)["buzzwords"]
-        
-        print(f"Generated Detailed Summary of \"{title}\", {buzzwords}")
-    except json.JSONDecodeError:
-        print(f"Could not generate detailed summary for \"{title}\"")
-        buzzwords = None
-    return buzzwords
-
+        result = json.loads(content)
+    except json.decoder.JSONDecodeError:
+        return {"summary": "No summary generated.", "buzzwords": []}
+    
+    summary = result.get("summary", "No summary generated.")
+    buzzwords = result.get("buzzwords", [])
+    return {"summary": summary, "buzzwords": buzzwords}
