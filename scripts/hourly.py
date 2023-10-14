@@ -9,7 +9,7 @@ from supabase import create_client
 from tqdm import tqdm
 
 from scrape import scrape_post
-from summarize import get_summary
+from summarize import get_post_insights
 
 load_dotenv()
 url = os.getenv("SUPABASE_URL")
@@ -56,33 +56,39 @@ def parse_feed(url, company):
             print(f"Skipped existing post: {title} from {company}")
             continue
 
-        # If the entry is not a duplicate, generate a summary
-        summary = get_summary(title, description)
-
-        # Get the full post text
-        full_text = scrape_post(link)
-
-        # Insert the new entry into the 'posts' table
-        entry_data = {
-            "published_at": published_at,
-            "company": company,
-            "title": title,
-            "link": link,
-            "description": description,
-            "summary": summary,
-            "full_text": full_text,
-        }
-        supabase.table("posts").insert(entry_data).execute()
-        print(f"Inserted post: {title} from {company}")
-
-        # Create a tweet
+        # If the entry is not a duplicate, generate a summary and buzzwords
         try:
+            # Get the full post text
+            full_text = scrape_post(link)
+
+            # Get post insights
+            insights = get_post_insights(title, full_text)
+            summary = insights["summary"]
+            buzzwords = insights["buzzwords"]
+
+            # Insert the new entry into the 'posts' table
+            entry_data = {
+                "published_at": published_at,
+                "company": company,
+                "title": title,
+                "link": link,
+                "description": description,
+                "summary": summary,
+                "full_text": full_text,
+                "buzzwords": buzzwords,
+            }
+            supabase.table("posts").insert(entry_data).execute()
+            print(f"Inserted post: {title} from {company}")
+
             twitter_client.create_tweet(
                 text=f"{company}: {title}\n\ndate: {published_at}\nlink: {link}",
             )
             print(f"Tweeted post: {title} from {company}")
         except tweepy.errors.TooManyRequests:
             print("Rate limit exceeded. Skipping tweet.")
+            continue
+        except Exception as e:
+            print(f"Error: {e}")
             continue
 
 
