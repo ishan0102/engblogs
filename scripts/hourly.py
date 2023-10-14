@@ -44,6 +44,11 @@ def parse_date(date_string):
 def parse_feed(url, company):
     feed = feedparser.parse(url)
     for entry in feed.entries:
+        # Skip on bad entries
+        if not hasattr(entry, "title") or not hasattr(entry, "link") or not hasattr(entry, "published"):
+            print(f"Skipped bad entry: {entry}")
+            continue
+
         # Fetch title and description
         title = entry.title
         description = getattr(entry, "description", "")
