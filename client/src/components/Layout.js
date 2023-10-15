@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Layout({ children }) {
   return (
     <div className="font-berkeley m-8 md:m-10 pb-20">
@@ -24,16 +26,24 @@ export default function Layout({ children }) {
 
         {/* Header */}
         <div className="flex text-center flex-col mb-4">
-          <div className="font-bold text-4xl mb-2">engblogs</div>
+          <Link className="font-bold text-4xl mb-2" href="/">
+            engblogs
+          </Link>
           <div className="text-md">learn from your favorite tech companies</div>
         </div>
 
         {children}
 
         {/* Footer */}
-        <div className="text-center mt-8">
-          built by <a className="text-indigo-500" href="https://www.ishanshah.me/" target="_blank">ishan</a>.
-          summaries by <a className="text-indigo-500" href="https://platform.openai.com/docs/models/gpt-3-5" target="_blank">gpt-3.5</a>.
+        <div className="mt-8">
+          <div className="text-center">
+            built by <a className="text-indigo-500" href="https://www.ishanshah.me/" target="_blank">ishan</a>.
+            summaries by <a className="text-indigo-500" href="https://platform.openai.com/docs/models/gpt-3-5" target="_blank">gpt-3.5</a>.
+
+          </div>
+          <div className="text-center">
+            read our <Link href="/privacy" className="text-indigo-500">privacy policy</Link> and contact our <Link href="/support" className="text-indigo-500">support</Link> page.
+          </div>
         </div>
       </div>
     </div>
