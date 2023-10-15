@@ -5,6 +5,7 @@ import BlogPost from '../components/BlogPost';
 import Pagination from '../components/Pagination';
 import Filter from '../components/Filter';
 import Search from '../components/Search';
+// import Navbar from '@/components/Navbar';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_KEY;
@@ -81,7 +82,7 @@ export default function Home(props) {
       if (filters.length > 0) {
         query = query.in('company', filters);
       }
-      
+
       // Search 
       if (searchTerm.length > 0) {
         query = query.or(`full_text.ilike.%${searchTerm}%`);
@@ -129,7 +130,7 @@ export default function Home(props) {
     if (filters.length > 0) {
       query = query.in('company', filters);
     }
-    
+
     // Search 
     if (searchTerm.length > 0) {
       query = query.or(`full_text.ilike.%${searchTerm}%`);
@@ -158,34 +159,7 @@ export default function Home(props) {
   }, [page, totalPages, filters, searchTerm]);
 
   return (
-    <div className="font-berkeley m-8 md:m-10 pb-20">
-      {/* Nav Buttons */}
-      <div className="mb-12">
-        <div className="absolute top-0 left-0 md:top-4 md:left-4">
-          <a href="https://github.com/ishan0102/engblogs" target="_blank" rel="noopener noreferrer">
-            <button className="block text-sm font-apple2mono focus:outline-none relative transform transition-transform md:duration-200 md:hover:scale-105 p-2">
-              <span className="inline-block py-1 px-2 rounded-lg">
-                github
-              </span>
-            </button>
-          </a>
-        </div>
-        <div className="absolute top-0 right-0 md:top-4 md:right-4">
-          <a href="https://donate.stripe.com/9AQ4hH7TO2PrfsY4gg" target="_blank" rel="noopener noreferrer">
-            <button className="block text-white text-sm font-apple2mono focus:outline-none relative transform transition-transform md:duration-200 md:hover:scale-105 p-2">
-              <span className="inline-block py-1 px-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 shadow-md transition-all duration-300 ease-in-out hover:from-orange-500 hover:to-red-800">
-                donate!
-              </span>
-            </button>
-          </a>
-        </div>
-      </div>
-
-      {/* Header */}
-      <div className="flex text-center flex-col mb-4">
-        <div className="font-bold text-4xl mb-2">engblogs</div>
-        <div className="text-md">learn from your favorite tech companies</div>
-      </div>
+    <>
 
       {/* Web Navigation - Shown on medium screens and up */}
       <div className="hidden md:grid grid-cols-3 gap-4 items-center">
@@ -236,16 +210,7 @@ export default function Home(props) {
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
           </svg>
         </div>
-      )
-      }
-
-      {/* Footer */}
-      {dataLoaded &&
-        <div className="text-center mt-8">
-          built by <a className="text-indigo-500" href="https://www.ishanshah.me/" target="_blank">ishan</a>.
-          summaries by <a className="text-indigo-500" href="https://platform.openai.com/docs/models/gpt-3-5" target="_blank">gpt-3.5</a>.
-        </div>
-      }
-    </div>
+      )}
+    </>
   )
 }
