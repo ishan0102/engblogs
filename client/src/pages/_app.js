@@ -1,3 +1,4 @@
+import Layout from '@/components/Layout';
 import '@/styles/globals.css'
 import { DefaultSeo } from 'next-seo'
 import Head from 'next/head'
@@ -24,7 +25,9 @@ export default function App({ Component, pageProps }) {
   return (
     <>
       <DefaultSeo {...defaultSEO} />
-      <Component {...pageProps} />
+      <Layout>
+        <Component {...pageProps} />
+      </Layout>
 
       <Head>
         <title>engblogs</title>
