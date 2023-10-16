@@ -5,17 +5,17 @@ import Head from 'next/head'
 import Script from 'next/script'
 
 const defaultSEO = {
-  title: 'engblogs',
+  title: 'Engblogs',
   description:
-    'learn from your favorite tech companies',
+    'Learn from your favorite tech companies.',
   openGraph: {
     type: 'website',
     url: 'https://www.engblogs.dev',
-    site_name: 'engblogs',
+    site_name: 'Engblogs',
     images: [
       {
         url: 'https://www.engblogs.dev/static/thumbnail.png',
-        alt: 'engblogs.dev homepage',
+        alt: 'Engblogs.dev homepage',
       },
     ],
   },
@@ -30,8 +30,9 @@ export default function App({ Component, pageProps }) {
       </Layout>
 
       <Head>
-        <title>engblogs</title>
+        <title>Engblogs</title>
         <link rel="icon" href="/static/favicon.png" />
+        <meta name="apple-itunes-app" content="app-id=6457546082" />
       </Head>
 
       {/* Global Site Tag (gtag.js) - Google Analytics */}

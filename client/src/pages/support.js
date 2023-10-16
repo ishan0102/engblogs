@@ -5,7 +5,7 @@ export default function Support(props) {
     <div className="flex flex-col justify-center items-center">
       <div className="p-8 bg-white rounded-xl shadow-xl max-w-md w-full">
         <h1 className="text-2xl font-bold mb-4">Support</h1>
-        <p>If you're experiencing issues with engblogs, we're here to help! Please send an email to <a className="text-indigo-500"href="mailto:ishan0102@gmail.com, ishan0102@gmail.com?subject=Engblogs Support Request">ishan0102@gmail.com</a>
+        <p>If you're experiencing issues with engblogs, we're here to help! Please send an email to <a className="text-indigo-500"href="mailto:ishan0102@gmail.com, ishan0102@gmail.com?subject=Engblogs Support Request">ishan0102@gmail.com</a>.
         </p>
 
         <div className="flex justify-between mt-4">
