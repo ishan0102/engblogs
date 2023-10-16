@@ -42,7 +42,7 @@ export default function Layout({ children }) {
 
           </div>
           <div className="text-center">
-            read our <Link href="/privacy" className="text-indigo-500">privacy policy</Link> and contact our <Link href="/support" className="text-indigo-500">support</Link> page.
+            read our <Link href="/privacy" className="text-indigo-500">privacy policy</Link> and view our <Link href="/support" className="text-indigo-500">support</Link> page.
           </div>
         </div>
       </div>
