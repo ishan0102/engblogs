@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export default function Support(props) {
+export default function Privacy(props) {
   return (
     <div className="flex justify-center mt-4">
     <div className="flex flex-col gap-4 max-w-3xl">
@@ -15,26 +15,10 @@ export default function Support(props) {
       <h2 className="text-xl font-bold">Consent</h2>
 
       <p>By using our website, you hereby consent to our Privacy Policy and agree to its terms.</p>
+      
+      <h2 className="text-xl font-bold">Information We Collect and How We Use It</h2>
 
-      <h2 className="text-xl font-bold">Information we collect</h2>
-
-      <p>The personal information that you are asked to provide, and the reasons why you are asked to provide it, will be made clear to you at the point we ask you to provide your personal information.</p>
-      <p>If you contact us directly, we may receive additional information about you such as your name, email address, phone number, the contents of the message and/or attachments you may send us, and any other information you may choose to provide.</p>
-      <p>When you register for an Account, we may ask for your contact information, including items such as name, company name, address, email address, and telephone number.</p>
-
-      <h2 className="text-xl font-bold">How we use your information</h2>
-
-      <p>We use the information we collect in various ways, including to:</p> 
-
-      <ul className="list-disc list-outside pl-8">
-        <li>Provide, operate, and maintain our website</li>
-        <li>Improve, personalize, and expand our website</li>
-        <li>Understand and analyze how you use our website</li>
-        <li>Develop new products, services, features, and functionality</li>
-        <li>Send you emails</li>
-        <li>Find and prevent fraud</li>
-        <li>Communicate with you, either directly or through one of our partners, including for customer service, to provide you with updates and other information relating to the website, and for marketing and promotional purposes</li>
-      </ul>
+      <p>At engblogs, we prioritize your privacy. We do not collect, store, or process any personal information from users who visit our website, mobile application, or associated platforms (collectively, the "Site"). While our systems may log general usage data, such as the number of visitors to our Site or the duration of visits, this data is anonymized and cannot be traced back to individual users. We utilize this aggregated, non-personal data solely for the purpose of enhancing the Site's functionality, understanding user preferences, and optimizing user experience. Rest assured, your personal privacy remains uncompromised when you access and use our Site.</p>
 
       <h2 className="text-xl font-bold">Log Files</h2>
 
