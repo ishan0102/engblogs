@@ -74,7 +74,7 @@ export default function Home(props) {
       // Query 'posts' table
       let query = supabase
         .from('posts')
-        .select("*", { count: "exact" })
+        .select("*, links(logo_url)", { count: "exact" })
         .order('published_at', { ascending: false })
         .order('id', { ascending: false });
 
@@ -127,7 +127,7 @@ export default function Home(props) {
 
       let query = supabase
         .from('posts')
-        .select("*", { count: "exact" })
+        .select("*, links(logo_url)", { count: "exact" })
         .order('published_at', { ascending: false })
         .order('id', { ascending: false });
 
@@ -206,6 +206,7 @@ export default function Home(props) {
             description={post.description}
             summary={post.summary}
             company={post.company}
+            logoUrl={post.links.logo_url}
             supabase={supabase}
             ip={ip}
           />
