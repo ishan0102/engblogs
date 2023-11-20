@@ -13,7 +13,7 @@ export default function Search({ onSearch }) {
   };
 
   return (
-    <div className="flex justify-center mt-6 mb-4">
+    <div className="flex justify-center mt-2 mb-2 md:mt-6 mb-4">
       <input
         id="search"
         className="text-gray-500 border border-gray-300 hover:border-gray-400 placeholder-gray-500 rounded px-2 py-1.5"

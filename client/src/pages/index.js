@@ -189,13 +189,15 @@ export default function Home(props) {
       </div>
 
       {/* Mobile Navigation - Shown on small screens */}
-      <div className="fixed z-20 md:hidden">
-        <Filter onFilterChange={handleFilterChange} supabase={supabase} />
-        <Search onSearch={handleSearch} />
+      <div className="grid grid-cols-1 gap-0">
+        <div className="fixed z-20 md:hidden justify-self-center">
+          <div className=""><Filter onFilterChange={handleFilterChange} supabase={supabase} /></div>
+          <div className=""><Search onSearch={handleSearch} /></div>
+        </div>
       </div>
 
       {/* Content */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pt-12">
+      <div className="grid grid-cols-1 pt-32 md:pt-12 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {blogPostsList.map((post, index) => (
           <BlogPost
             key={index}
