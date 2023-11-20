@@ -53,7 +53,7 @@ export default function Filter({ onFilterChange, supabase }) {
   }, []);
 
   return (
-    <div className="flex justify-center mt-6 mb-4">
+    <div className="flex justify-center mt-4 mb-2 md:mt-6 mb-4">
       <Select
         instanceId="filter"
         options={companyOptions}

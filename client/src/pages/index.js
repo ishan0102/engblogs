@@ -1,11 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
-
 import BlogPost from '../components/BlogPost';
-import Pagination from '../components/Pagination';
 import Filter from '../components/Filter';
 import Search from '../components/Search';
-// import Navbar from '@/components/Navbar';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_KEY;
@@ -43,21 +40,24 @@ export async function getServerSideProps(context) {
 
 export default function Home(props) {
   const [blogPostsList, setBlogPostsList] = useState([]);
-  const [page, setPage] = useState(getSessionPage());
+  const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [filters, setFilters] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const ip = props.ip;
+  const pageRef = useRef(page);
 
   const handleFilterChange = (filterValue) => {
     setFilters(filterValue);
     setPage(0); // Reset page when filter changes to display results from the first page
+    setBlogPostsList([]);
   };
 
   const handleSearch = (searchString) => {
     setSearchTerm(searchString);
     setPage(0);
+    setBlogPostsList([]);
   };
 
   // Fetching
@@ -67,7 +67,7 @@ export default function Home(props) {
     const cachedTotalPages = sessionStorage.getItem("totalPages");
 
     if (cachedPosts && cachedTotalPages && filters.length === 0 && searchTerm.length === 0) {
-      setBlogPostsList(JSON.parse(cachedPosts));
+      setBlogPostsList((prev) => [...prev, ...JSON.parse(cachedPosts)]);
       setTotalPages(parseInt(cachedTotalPages));
       setDataLoaded(true);
     } else {
@@ -93,7 +93,7 @@ export default function Home(props) {
       if (error) {
         console.error("Error fetching posts:", error);
       } else {
-        setBlogPostsList(posts);
+        setBlogPostsList((prev) => [...prev, ...posts]);
 
         const totalPages = Math.ceil(count / POSTS_PER_PAGE);
         setTotalPages(totalPages);
@@ -109,40 +109,36 @@ export default function Home(props) {
   };
 
   useEffect(() => {
-    fetchPosts(page);
-    sessionStorage.setItem("currentPage", page);
+    if (page <= totalPages) {
+      fetchPosts(page);
+      pageRef.current = page;
+      sessionStorage.setItem("currentPage", page);
+    }
   }, [page, filters, searchTerm]);
 
   // Prefetching
   const prefetchPosts = async (pageNumber, filters) => {
-    const cachedPosts = sessionStorage.getItem(`posts-${pageNumber}`);
+    // Prefetch and caching only if no filter and no search
+    if (filters.length === 0 && searchTerm.length === 0) {
+      const cachedPosts = sessionStorage.getItem(`posts-${pageNumber}`);
 
-    // If we have the data in the cache, no need to prefetch
-    if (cachedPosts) return;
+      // If we have the data in the cache, no need to prefetch
+      if (cachedPosts) return;
 
-    let query = supabase
-      .from('posts')
-      .select("*, links(logo_url)", { count: "exact" })
-      .order('published_at', { ascending: false })
-      .order('id', { ascending: false });
+      let query = supabase
+        .from('posts')
+        .select("*, links(logo_url)", { count: "exact" })
+        .order('published_at', { ascending: false })
+        .order('id', { ascending: false });
 
-    // Filter results
-    if (filters.length > 0) {
-      query = query.in('company', filters);
-    }
+      let { count, data: posts, error } = await query.range(pageNumber * POSTS_PER_PAGE, (pageNumber + 1) * POSTS_PER_PAGE - 1);
 
-    // Search 
-    if (searchTerm.length > 0) {
-      query = query.or(`full_text.ilike.%${searchTerm}%`);
-    }
-
-    let { count, data: posts, error } = await query.range(pageNumber * POSTS_PER_PAGE, (pageNumber + 1) * POSTS_PER_PAGE - 1);
-
-    if (error) {
-      console.error("Error fetching posts:", error);
-    } else {
-      // Store posts in cache
-      sessionStorage.setItem(`posts-${pageNumber}`, JSON.stringify(posts));
+      if (error) {
+        console.error("Error fetching posts:", error);
+      } else {
+        // Store posts in cache
+        sessionStorage.setItem(`posts-${pageNumber}`, JSON.stringify(posts));
+      }
     }
   };
 
@@ -151,41 +147,60 @@ export default function Home(props) {
     if (nextPage < totalPages) {
       prefetchPosts(nextPage, filters);
     }
-
-    const prevPage = page - 1;
-    if (prevPage >= 0) {
-      prefetchPosts(prevPage, filters);
-    }
   }, [page, totalPages, filters, searchTerm]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          if (pageRef.current === 0) {
+            prefetchPosts(pageRef.current + 1, filters);
+          }
+          setPage((prev) => prev + 1);
+        }
+      },
+      { threshold: 1 }
+    );
+
+    const sentinel = document.getElementById("sentinel");
+    if (sentinel) {
+      observer.observe(sentinel);
+    }
+
+    return () => {
+      if (sentinel) {
+        observer.unobserve(sentinel);
+      }
+    }
+
+  }, []);
 
   return (
     <>
 
       {/* Web Navigation - Shown on medium screens and up */}
-      <div className="hidden md:grid grid-cols-3 gap-4 items-center">
-        <div className="justify-self-start">
+      <div className="hidden md:grid grid-cols-2 gap-1 items-center">
+        <div className="fixed z-20 justify-self-start">
           <Filter onFilterChange={handleFilterChange} supabase={supabase} />
         </div>
-        <div className="justify-self-center">
-          <Pagination page={page} totalPages={totalPages} setPage={setPage} />
-        </div>
-        <div className="justify-self-end">
+        <div className="fixed z-20 justify-self-end">
           <Search onSearch={handleSearch} />
         </div>
       </div>
 
       {/* Mobile Navigation - Shown on small screens */}
-      <div className="md:hidden">
-        <Filter onFilterChange={handleFilterChange} supabase={supabase} />
-        <Search onSearch={handleSearch} />
-        <Pagination page={page} totalPages={totalPages} setPage={setPage} />
+      <div className="grid grid-cols-1 gap-0">
+        <div className="fixed z-20 md:hidden justify-self-center">
+          <div className=""><Filter onFilterChange={handleFilterChange} supabase={supabase} /></div>
+          <div className=""><Search onSearch={handleSearch} /></div>
+        </div>
       </div>
 
       {/* Content */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 pt-32 md:pt-12 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {blogPostsList.map((post, index) => (
           <BlogPost
-            key={post.id}
+            key={index}
             post_id={post.id}
             title={post.title}
             published_at={post.published_at}
@@ -200,8 +215,8 @@ export default function Home(props) {
         ))}
       </div>
 
-      {/* Bottom Pagination */}
-      {dataLoaded && <Pagination page={page} totalPages={totalPages} setPage={setPage} />}
+      {/* Sentinel for Intersection Observer */}
+      {(<div id="sentinel"></div >)}
 
       {/* Loading */}
       {!dataLoaded && (
