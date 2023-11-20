@@ -19,6 +19,11 @@ const defaultSEO = {
       },
     ],
   },
+  twitter: {
+    handle: '@ishan0102',
+    site: '@ishan0102',
+    cardType: 'summary_large_image',
+  },
 };
 
 export default function App({ Component, pageProps }) {
