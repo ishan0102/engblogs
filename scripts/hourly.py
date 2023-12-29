@@ -3,7 +3,6 @@ import os
 
 import feedparser
 import openai
-import tweepy
 from dotenv import load_dotenv
 from supabase import create_client
 from tqdm import tqdm
@@ -16,12 +15,6 @@ url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_KEY")
 supabase = create_client(url, key)
 openai.api_key = os.getenv("OPENAI_API_KEY")
-twitter_client = tweepy.Client(
-    consumer_key=os.getenv("TWITTER_CONSUMER_KEY"),
-    consumer_secret=os.getenv("TWITTER_CONSUMER_SECRET"),
-    access_token=os.getenv("TWITTER_ACCESS_TOKEN"),
-    access_token_secret=os.getenv("TWITTER_ACCESS_TOKEN_SECRET"),
-)
 
 
 def parse_date(date_string):
@@ -85,13 +78,6 @@ def parse_feed(url, company):
             supabase.table("posts").insert(entry_data).execute()
             print(f"Inserted post: {title} from {company}")
 
-            twitter_client.create_tweet(
-                text=f"{company}: {title}\n\ndate: {published_at}\nlink: {link}",
-            )
-            print(f"Tweeted post: {title} from {company}")
-        except tweepy.errors.TooManyRequests:
-            print("Rate limit exceeded. Skipping tweet.")
-            continue
         except Exception as e:
             print(f"Error: {e}")
             continue

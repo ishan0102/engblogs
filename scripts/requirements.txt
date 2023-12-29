@@ -6,12 +6,14 @@ attrs==23.1.0
 beautifulsoup4==4.12.2
 bleach==6.0.0
 certifi==2023.5.7
+cffi==1.16.0
 chardet==5.1.0
 charset-normalizer==3.2.0
 click==8.1.4
 click-log==0.4.0
 colorama==0.4.6
 courlan==0.9.4
+cryptography==41.0.7
 dateparser==1.1.8
 deprecation==2.1.0
 docutils==0.20.1
@@ -30,10 +32,11 @@ idna==3.4
 importlib-metadata==6.7.0
 invoke==1.7.3
 jaraco.classes==3.2.3
+jeepney==0.8.0
 jusText==3.0.0
 keyring==24.2.0
 langcodes==3.3.0
-lxml==4.9.2
+lxml==4.9.4
 more-itertools==9.1.0
 multidict==6.0.4
 oauthlib==3.2.2
@@ -41,6 +44,7 @@ openai==0.27.8
 packaging==23.1
 pkginfo==1.9.6
 postgrest==0.10.6
+pycparser==2.21
 pydantic==1.10.11
 Pygments==2.15.1
 python-dateutil==2.8.2
@@ -55,6 +59,7 @@ requests==2.31.0
 requests-oauthlib==1.3.1
 requests-toolbelt==1.0.0
 rfc3986==1.5.0
+SecretStorage==3.3.3
 semver==2.13.0
 sgmllib3k==1.0.0
 six==1.16.0
@@ -70,7 +75,6 @@ tld==0.13
 tomlkit==0.11.8
 tqdm==4.65.0
 trafilatura==1.6.2
-tweepy==4.14.0
 twine==3.8.0
 typing_extensions==4.7.1
 tzlocal==5.0.1
