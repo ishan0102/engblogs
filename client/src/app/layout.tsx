@@ -64,6 +64,7 @@ export default function RootLayout({
             <Link
               className="underline decoration-foreground decoration-dotted underline-offset-1 transition-colors hover:decoration-foreground-light"
               href="https://www.ishanshah.me/"
+              target="_blank"
             >
               ishan
             </Link>{" "}
@@ -71,6 +72,7 @@ export default function RootLayout({
             <Link
               className="underline decoration-foreground decoration-dotted underline-offset-1 transition-colors hover:decoration-foreground-light"
               href="https://www.linus.systems"
+              target="_blank"
             >
               linus
             </Link>
