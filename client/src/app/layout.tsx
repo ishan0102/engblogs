@@ -4,6 +4,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "engblogs",
@@ -41,14 +42,16 @@ export default function RootLayout({
         )}
       >
         <header className="flex w-full flex-col items-start justify-start gap-2 border-b border-b-background-light p-4 md:flex-row md:items-center md:px-6 md:py-4">
-          <h1
-            className={cn(
-              GeistMono.className,
-              "rounded-full border border-background-light bg-background-light px-3 py-1 leading-5 text-foreground-light",
-            )}
-          >
-            engblogs
-          </h1>
+          <Link href="/">
+            <h1
+              className={cn(
+                GeistMono.className,
+                "rounded-full border border-background-light bg-background-light px-3 py-1 leading-5 text-foreground-light",
+              )}
+            >
+              engblogs
+            </h1>
+          </Link>
           <span className="hidden h-1 w-1 rounded-full bg-background-light md:block"></span>
           <span className="leading-5 text-foreground">
             summaries of the latest blog articles from your favorite tech
@@ -62,7 +65,7 @@ export default function RootLayout({
           <p>
             built by{" "}
             <Link
-              className="underline decoration-foreground decoration-dotted underline-offset-1 transition-colors hover:decoration-foreground-light"
+              className="underline decoration-foreground decoration-dotted underline-offset-1 transition-colors hover:text-foreground-light hover:decoration-foreground-light"
               href="https://www.ishanshah.me/"
               target="_blank"
             >
@@ -70,7 +73,7 @@ export default function RootLayout({
             </Link>{" "}
             and{" "}
             <Link
-              className="underline decoration-foreground decoration-dotted underline-offset-1 transition-colors hover:decoration-foreground-light"
+              className="underline decoration-foreground decoration-dotted underline-offset-1 transition-colors hover:text-foreground-light hover:decoration-foreground-light"
               href="https://www.linus.systems"
               target="_blank"
             >
@@ -103,6 +106,13 @@ export default function RootLayout({
               support
             </Link>
             <Link
+              href="https://apps.apple.com/us/app/engblogs/id6457546082"
+              className="transition-colors hover:text-foreground-light"
+              target="_blank"
+            >
+              ios app
+            </Link>
+            <Link
               href="/privacy"
               className="transition-colors hover:text-foreground-light"
             >
@@ -111,6 +121,26 @@ export default function RootLayout({
           </p>
         </footer>
       </body>
+
+      {/* Global Site Tag (gtag.js) - Google Analytics */}
+      <Script
+        strategy="afterInteractive"
+        src={"https://www.googletagmanager.com/gtag/js?id=G-V596PGDDBE"}
+      />
+      <Script
+        id="gtag-init"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-V596PGDDBE', {
+                page_path: window.location.pathname,
+              });
+            `,
+        }}
+      />
     </html>
   );
 }
