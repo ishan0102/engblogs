@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #1d1d1d;
+    --background-light: #363636;
+    --foreground: #9f9f9f;
+    --foreground-light: #ffffff;
+
+    --border: #666666;
+    --radius: 0.5rem;
+    --badge: #282828;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
