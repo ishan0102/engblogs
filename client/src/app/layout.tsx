@@ -8,14 +8,15 @@ import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "engblogs",
-  description: "Learn from your favorite tech companies.",
+  description:
+    "summaries of the latest blog articles from your favorite tech companies.",
   openGraph: {
     type: "website",
     url: "https://www.engblogs.dev",
     siteName: "engblogs",
     images: [
       {
-        url: "https://www.engblogs.dev/static/thumbnail.png",
+        url: "/thumbnail.png",
         alt: "engblogs.dev homepage",
       },
     ],
@@ -25,6 +26,7 @@ export const metadata: Metadata = {
     site: "@ishan0102",
     card: "summary_large_image",
   },
+  icons: "/favicon.png",
   metadataBase: new URL("https://engblogs.dev"),
 };
 
