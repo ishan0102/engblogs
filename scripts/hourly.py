@@ -1,8 +1,8 @@
 import datetime
 import os
+from openai import OpenAI
 
 import feedparser
-import openai
 from dotenv import load_dotenv
 from supabase import create_client
 from tqdm import tqdm
@@ -14,7 +14,8 @@ load_dotenv()
 url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_KEY")
 supabase = create_client(url, key)
-openai.api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI()
+client.api_key = os.getenv("OPENAI_API_KEY")
 
 
 def parse_date(date_string):
@@ -60,7 +61,7 @@ def parse_feed(url, company):
             full_text = scrape_post(link)
 
             # Get post insights
-            insights = get_post_insights(title, full_text)
+            insights = get_post_insights(client, title, full_text)
             summary = insights["summary"]
             buzzwords = insights["buzzwords"]
 
