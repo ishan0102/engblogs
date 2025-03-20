@@ -90,7 +90,7 @@ export default function RootLayout({
           <p className="flex items-center gap-4">
             <Link
               className="rounded-lg bg-background-light px-2 py-1 transition-colors hover:text-foreground-light"
-              href="https://donate.stripe.com/9AQ4hH7TO2PrfsY4gg"
+              href="https://donate.stripe.com/9AQaEK6A26Dz6kgbII"
               target="_blank"
             >
               donate
