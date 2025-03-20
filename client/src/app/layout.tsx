@@ -4,7 +4,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import Script from "next/script";
+import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
   title: "engblogs",
@@ -124,25 +124,7 @@ export default function RootLayout({
         </footer>
       </body>
 
-      {/* Global Site Tag (gtag.js) - Google Analytics */}
-      <Script
-        strategy="afterInteractive"
-        src={"https://www.googletagmanager.com/gtag/js?id=G-V596PGDDBE"}
-      />
-      <Script
-        id="gtag-init"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-V596PGDDBE', {
-                page_path: window.location.pathname,
-              });
-            `,
-        }}
-      />
+      <Analytics />
     </html>
   );
 }
