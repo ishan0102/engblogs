@@ -1,8 +1,6 @@
 import json
-import os
 
-
-def get_post_insights(client, title, fullText, model="gpt-3.5-turbo-0125"):
+def get_post_insights(client, title, fullText, model="gpt-4.1-mini"):
     # Create a combined prompt for summary and buzzwords
     prompt = f"Create a one line description for a technical blogpost based on the title and full text I provide you. Also, give me a list of the top 5 most important buzzwords from the same. Respond only in JSON, using 'summary' and 'buzzwords' as the keys. Do not say what you're describing, i.e. don't start with 'this blogpost is about'.\n\nTitle: '{title}'\n\nFull Text: '{fullText}'"
 

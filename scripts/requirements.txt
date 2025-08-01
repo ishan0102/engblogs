@@ -1,7 +1,0 @@
-feedparser==6.0.11
-openai==1.12.0
-pip-chill==1.0.3
-python-dotenv==1.0.1
-supabase==2.3.6
-tiktoken==0.6.0
-trafilatura==1.7.0
