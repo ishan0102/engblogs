@@ -81,10 +81,7 @@ export default function RootLayout({
             >
               linus
             </Link>
-            , summaries by{" "}
-            <Link href="https://platform.openai.com/docs/models/gpt-3-5">
-              gpt-3.5
-            </Link>
+            , summaries by GPT
             .
           </p>
           <p className="flex items-center gap-4">
