@@ -81,8 +81,7 @@ export default function RootLayout({
             >
               linus
             </Link>
-            , summaries by GPT
-            .
+            , summaries by GPT .
           </p>
           <p className="flex items-center gap-4">
             <Link
