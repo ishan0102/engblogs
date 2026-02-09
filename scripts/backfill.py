@@ -24,13 +24,9 @@ def log_message(message, type="INFO"):
 
 
 def backfill_full_text():
-    posts = supabase.table("posts").select("link, full_text").execute().data
+    posts = supabase.table("posts").select("link").is_("full_text", "null").execute().data
     for post in tqdm(posts):
         link = post["link"]
-
-        if post["full_text"]:
-            log_message(f"Skipping {link} - already scraped")
-            continue
 
         log_message(f"Scraping {link}")
         full_text = scrape_post(link)
@@ -45,17 +41,13 @@ def backfill_full_text():
 
 
 def backfill_buzzwords():
-    posts = supabase.table("posts").select("title, link, description, summary, full_text, buzzwords").execute().data
+    posts = supabase.table("posts").select("title, link, description, summary, full_text").is_("buzzwords", "null").execute().data
     for post in tqdm(posts):
         title = post["title"]
         link = post["link"]
         description = post["description"]
         full_text = post["full_text"]
         summary = post["summary"]
-
-        if post["buzzwords"]:
-            log_message(f"Skipping {link} - buzzwords already extracted")
-            continue
 
         context = full_text if full_text else description if description else summary
         buzzwords = get_post_insights(title, context)["buzzwords"]

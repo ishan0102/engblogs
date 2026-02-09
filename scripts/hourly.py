@@ -35,7 +35,27 @@ def parse_date(date_string):
     raise ValueError(f"couldn't parse date {date_string} with any of the known formats")
 
 
-def parse_feed(url, company):
+def get_existing_links():
+    """Fetch all existing post links from Supabase in one query."""
+    existing = set()
+    page_size = 1000
+    offset = 0
+    while True:
+        batch = (
+            supabase.table("posts")
+            .select("link")
+            .range(offset, offset + page_size - 1)
+            .execute()
+            .data
+        )
+        existing.update(row["link"] for row in batch)
+        if len(batch) < page_size:
+            break
+        offset += page_size
+    return existing
+
+
+def parse_feed(url, company, existing_links):
     feed = feedparser.parse(url)
     for entry in feed.entries:
         # Skip on bad entries
@@ -50,8 +70,8 @@ def parse_feed(url, company):
         published_at = parse_date(entry.published)
         link = entry.link
 
-        # Check if the entry exists in the 'posts' table
-        if supabase.table("posts").select("*").eq("link", link).execute().data:
+        # Check against the in-memory set instead of querying Supabase per entry
+        if link in existing_links:
             print(f"Skipped existing post: {title} from {company}")
             continue
 
@@ -77,6 +97,7 @@ def parse_feed(url, company):
                 "buzzwords": buzzwords,
             }
             supabase.table("posts").insert(entry_data).execute()
+            existing_links.add(link)
             print(f"Inserted post: {title} from {company}")
 
         except Exception as e:
@@ -88,9 +109,14 @@ def parse_feed(url, company):
 response = supabase.table("links").select("company, link").execute()
 rss_links = response.data
 
+# Fetch all existing post links once upfront
+print("Fetching existing posts...")
+existing_links = get_existing_links()
+print(f"Found {len(existing_links)} existing posts.")
+
 print("Start parsing feeds...")
 for link_info in tqdm(rss_links, desc="Parsing RSS feeds", unit="feed"):
     company = link_info["company"]
     url = link_info["link"]
-    parse_feed(url, company)
+    parse_feed(url, company, existing_links)
 print("Finished parsing feeds.")
