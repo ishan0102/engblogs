@@ -25,8 +25,8 @@ const supabase = createClient(
 
 async function getPosts(page: number = 1, companies: string[] = []) {
   const query = supabase
-    .from("posts")
-    .select("*, links ( company, logo_url )", { count: "exact" })
+    .from("engblogs_posts")
+    .select("title, link, summary, company, published_at, links:engblogs_links ( company, logo_url )", { count: "exact" })
     .order("published_at", { ascending: false })
     .order("id", { ascending: false });
 
@@ -53,7 +53,7 @@ async function getPosts(page: number = 1, companies: string[] = []) {
 
 async function getCompanies() {
   let { data, error } = await supabase
-    .from("links")
+    .from("engblogs_links")
     .select("company, logo_url")
     .order("company", { ascending: true });
 

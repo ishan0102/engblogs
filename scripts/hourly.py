@@ -1,3 +1,4 @@
+import argparse
 import datetime
 import os
 from openai import OpenAI
@@ -35,28 +36,19 @@ def parse_date(date_string):
     raise ValueError(f"couldn't parse date {date_string} with any of the known formats")
 
 
-def get_existing_links():
-    """Fetch all existing post links from Supabase in one query."""
+def get_existing_links(entries):
+    links = list(dict.fromkeys(entry.link for entry in entries if entry.get("link")))
     existing = set()
-    page_size = 1000
-    offset = 0
-    while True:
-        batch = (
-            supabase.table("posts")
-            .select("link")
-            .range(offset, offset + page_size - 1)
-            .execute()
-            .data
-        )
-        existing.update(row["link"] for row in batch)
-        if len(batch) < page_size:
-            break
-        offset += page_size
+    for offset in range(0, len(links), 20):
+        rows = supabase.table("engblogs_posts").select("link").in_("link", links[offset:offset + 20]).execute().data
+        existing.update(row["link"] for row in rows)
     return existing
 
 
-def parse_feed(url, company, existing_links):
+def parse_feed(url, company, max_new=None):
     feed = feedparser.parse(url)
+    existing_links = get_existing_links(feed.entries)
+    inserted = 0
     for entry in feed.entries:
         # Skip on bad entries
         if not hasattr(entry, "title") or not hasattr(entry, "link") or not hasattr(entry, "published"):
@@ -67,7 +59,11 @@ def parse_feed(url, company, existing_links):
         title = entry.title
         description = getattr(entry, "description", "")
         # Convert the timestamp into yyyy-mm-dd format
-        published_at = parse_date(entry.published)
+        try:
+            published_at = parse_date(entry.published)
+        except ValueError:
+            print(f"Skipped unsupported date from {company}: {entry.published}")
+            continue
         link = entry.link
 
         # Check against the in-memory set instead of querying Supabase per entry
@@ -96,27 +92,32 @@ def parse_feed(url, company, existing_links):
                 "full_text": full_text,
                 "buzzwords": buzzwords,
             }
-            supabase.table("posts").insert(entry_data).execute()
+            supabase.table("engblogs_posts").insert(entry_data).execute()
             existing_links.add(link)
+            inserted += 1
             print(f"Inserted post: {title} from {company}")
+            if inserted == max_new:
+                break
 
         except Exception as e:
             print(f"Error: {e}")
             continue
 
 
-# Fetch companies and links from the 'links' table
-response = supabase.table("links").select("company, link").execute()
-rss_links = response.data
+    return inserted
 
-# Fetch all existing post links once upfront
-print("Fetching existing posts...")
-existing_links = get_existing_links()
-print(f"Found {len(existing_links)} existing posts.")
 
-print("Start parsing feeds...")
-for link_info in tqdm(rss_links, desc="Parsing RSS feeds", unit="feed"):
-    company = link_info["company"]
-    url = link_info["link"]
-    parse_feed(url, company, existing_links)
-print("Finished parsing feeds.")
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--max-new", type=int, help="Stop after this many successful imports")
+    args = parser.parse_args()
+    if args.max_new is not None and args.max_new < 1:
+        parser.error("--max-new must be positive")
+    feeds = supabase.table("engblogs_links").select("company, link").execute().data
+    inserted = 0
+    for feed in tqdm(feeds, desc="Parsing RSS feeds", unit="feed"):
+        remaining = None if args.max_new is None else args.max_new - inserted
+        inserted += parse_feed(feed["link"], feed["company"], remaining)
+        if inserted == args.max_new:
+            break
+    print(f"Finished parsing feeds. Inserted {inserted} posts.")

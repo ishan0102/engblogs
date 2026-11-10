@@ -10,18 +10,16 @@ you could use an RSS reader but what's the fun in that? I run a cronjob that scr
 if you're interested in using this data for training an LLM or building your own project, be my guest. just credit my github please :)
 you can run this command to get the posts data:
 ```sh
-curl 'https://corpcplcbbbchszhzofk.supabase.co/rest/v1/posts?select=*' \
--H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvcnBjcGxjYmJiY2hzemh6b2ZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODYyNzU2MzgsImV4cCI6MjAwMTg1MTYzOH0.c5ALD_rsD48EcZTrEeHZqfTCLf5L61IIlSgxuH4PVHI" \
--H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvcnBjcGxjYmJiY2hzemh6b2ZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODYyNzU2MzgsImV4cCI6MjAwMTg1MTYzOH0.c5ALD_rsD48EcZTrEeHZqfTCLf5L61IIlSgxuH4PVHI"
+curl "$SUPABASE_URL/rest/v1/engblogs_posts?select=*" \
+  -H "apikey: $SUPABASE_PUBLISHABLE_KEY"
 ```
 this will return some JSON
 
 ## cron
-for my own reference, this is the cron command that ended up working:
-```sh
-0 * * * * ~/documents/engblogs/scripts/run.sh >/dev/null 2>&1
-```
-it runs once per hour
+The hourly importer reads the configured feeds and adds new articles to `engblogs_posts`.
+Run `uv run hourly.py --max-new 1` from `scripts/` to test one new import.
+Use a server-side Supabase secret key for the importer and a publishable key for the gallery.
+The macOS schedule and runtime installer live in the personal dotfiles repo under `jobs/`.
 
 ## contribute
 please do! run `npm run dev` in the `client` folder to start the webapp. the `scripts` folder contains the code to fetch data from RSS feeds, which you can repurpose for any RSS feeds you want.

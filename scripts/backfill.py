@@ -24,7 +24,7 @@ def log_message(message, type="INFO"):
 
 
 def backfill_full_text():
-    posts = supabase.table("posts").select("link").is_("full_text", "null").execute().data
+    posts = supabase.table("engblogs_posts").select("link").is_("full_text", "null").execute().data
     for post in tqdm(posts):
         link = post["link"]
 
@@ -34,14 +34,14 @@ def backfill_full_text():
             log_message(f"Trafilatura - failed to scrape {link}", "WARNING")
             continue
 
-        response = supabase.table("posts").update({"full_text": full_text}).match({"link": link}).execute()
+        response = supabase.table("engblogs_posts").update({"full_text": full_text}).match({"link": link}).execute()
 
         if "error" in response:
             log_message(f"Supabase - failed to backfill {link}: {response['error']}", "ERROR")
 
 
 def backfill_buzzwords():
-    posts = supabase.table("posts").select("title, link, description, summary, full_text").is_("buzzwords", "null").execute().data
+    posts = supabase.table("engblogs_posts").select("title, link, description, summary, full_text").is_("buzzwords", "null").execute().data
     for post in tqdm(posts):
         title = post["title"]
         link = post["link"]
@@ -53,7 +53,7 @@ def backfill_buzzwords():
         buzzwords = get_post_insights(title, context)["buzzwords"]
         log_message(f"Extracting buzzwords for {link}")
 
-        response = supabase.table("posts").update({"buzzwords": buzzwords}).match({"link": link}).execute()
+        response = supabase.table("engblogs_posts").update({"buzzwords": buzzwords}).match({"link": link}).execute()
 
         if "error" in response:
             log_message(f"Supabase - failed to backfill {link}: {response['error']}", "ERROR")
