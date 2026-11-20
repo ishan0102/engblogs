@@ -1,123 +1,194 @@
+"""Bounded, single-owner RSS ingestion; run on the devbox with systemd."""
 import argparse
-import datetime
+import calendar
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timezone
+import fcntl
+import json
 import os
-from openai import OpenAI
+from pathlib import Path
+import shlex
+import sys
+import tempfile
+import time
 
 import feedparser
-from dotenv import load_dotenv
+import httpx
+from dotenv import dotenv_values
+from openai import OpenAI, AuthenticationError, PermissionDeniedError, RateLimitError, BadRequestError
 from supabase import create_client
-from tqdm import tqdm
 
-from scrape import scrape_post
+from scrape import scrape_post, fetch_bytes
 from summarize import get_post_insights
 
-load_dotenv()
-url = os.getenv("SUPABASE_URL")
-key = os.getenv("SUPABASE_KEY")
-supabase = create_client(url, key)
-client = OpenAI()
-client.api_key = os.getenv("OPENAI_API_KEY")
+FATAL_MODEL_ERRORS = (AuthenticationError, PermissionDeniedError, RateLimitError, BadRequestError)
 
 
-def parse_date(date_string):
-    formats = [
-        "%Y-%m-%dT%H:%M:%SZ",  # Format like '2023-07-06T19:00:51Z'
-        "%a, %d %b %Y %H:%M:%S %Z",  # Format like 'Tue, 20 Jun 2023 00:00:00 GMT'
-        "%a, %d %b %Y %H:%M:%S %z",  # Format like 'Wed, 08 Mar 2023 00:00:00 +0000'
-        "%Y-%m-%dT%H:%M:%S.%f%z",  # Format like '2023-07-06T12:50:00.000-07:00'
-        "%Y-%m-%d %H:%M:%S",  # Format like '2023-06-29 16:30:00'
-        "%Y-%m-%dT%H:%M:%S%z",  # Format like '2023-09-13T00:00:00+00:00'
-    ]
-    for fmt in formats:
+def config():
+    values = dict(dotenv_values(Path(__file__).with_name('.env')))
+    extras = Path.home() / '.extras'
+    if extras.exists():
+        # Read only this key; never execute a shell profile or load unrelated secrets.
+        for line in extras.read_text().splitlines():
+            line = line.strip().removeprefix('export ').strip()
+            name, sep, value = line.partition('=')
+            if sep and name.strip() == 'OPENAI_API_KEY':
+                parts = shlex.split(value, comments=True)
+                if len(parts) != 1:
+                    raise ValueError('OPENAI_API_KEY must contain one quoted value')
+                values['OPENAI_API_KEY'] = parts[0]
+    values.update({key: os.environ[key] for key in ('OPENAI_API_KEY', 'SUPABASE_URL', 'SUPABASE_KEY', 'ENGBLOGS_MODEL') if key in os.environ})
+    for key in ('OPENAI_API_KEY', 'SUPABASE_URL', 'SUPABASE_KEY'):
+        if not values.get(key):
+            raise ValueError(f'Missing {key}')
+    return values
+
+
+def read_feed(feed):
+    parsed = feedparser.parse(fetch_bytes(feed['link']))
+    if not parsed.entries:
+        raise ValueError('Feed has no parseable entries')
+    rows, invalid = [], 0
+    for entry in parsed.entries:
+        stamp = entry.get('published_parsed') or entry.get('updated_parsed')
+        if not entry.get('title') or not entry.get('link') or not stamp:
+            invalid += 1
+            continue
+        published = datetime.fromtimestamp(calendar.timegm(stamp), timezone.utc).date()
+        if published > datetime.now(timezone.utc).date():
+            invalid += 1
+            continue
+        rows.append(dict(title=entry.title, link=entry.link, company=feed['company'],
+                         description=entry.get('description', ''), published_at=published.isoformat()))
+    return rows, invalid
+
+
+def existing_links(db):
+    links, offset = set(), 0
+    while True:
+        rows = db.table('engblogs_posts').select('id,link').order('id').range(offset, offset + 999).execute().data
+        links.update(row['link'] for row in rows)
+        if len(rows) < 1000:
+            return links
+        offset += len(rows)
+
+
+def prepare(row, client, model):
+    started = time.monotonic()
+    text = scrape_post(row['link'])
+    if not text or len(text.strip()) < 100:
+        raise ValueError('No usable article text')
+    insights, usage = get_post_insights(client, row['title'], text, model=model, with_usage=True)
+    return {**row, 'full_text': text, **insights}, usage, time.monotonic() - started
+
+
+def ingest(args, stats):
+    settings = config()
+    db = create_client(settings['SUPABASE_URL'], settings['SUPABASE_KEY'])
+    model = settings.get('ENGBLOGS_MODEL') or 'gpt-5-nano'
+    with OpenAI(api_key=settings['OPENAI_API_KEY'], timeout=httpx.Timeout(45, connect=10), max_retries=0) as client:
+        # Authentication/model access is checked once, before scraping or paid requests.
+        client.models.retrieve(model)
+        feeds = db.table('engblogs_links').select('company,link').execute().data
+        known = existing_links(db)
+        stats.update(model=model, feeds=len(feeds), existing=len(known))
+        candidates = {}
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            jobs = {pool.submit(read_feed, feed): feed['company'] for feed in feeds}
+            for job in as_completed(jobs):
+                company = jobs[job]
+                try:
+                    rows, invalid = job.result()
+                    stats['invalid_entries'] += invalid
+                    stats['feeds_ok'] += 1
+                    for row in rows:
+                        if row['link'] not in known:
+                            candidates.setdefault(row['link'], row)
+                except Exception as error:
+                    stats['feed_errors'].append({'company': company, 'error': type(error).__name__, 'http_status': getattr(getattr(error, 'response', None), 'status_code', None)})
+                    print(f'Feed warning: {company}: {type(error).__name__}', flush=True)
+        if not stats['feeds_ok']:
+            raise RuntimeError('All feeds failed')
+        retry_path = args.state_dir / 'article-retries.json'
+        retries = json.loads(retry_path.read_text()) if retry_path.exists() else {}
+        retries = {link: until for link, until in retries.items() if link not in known and until > time.time()}
+        pending = sorted((row for link, row in candidates.items() if link not in retries),
+                         key=lambda row: (row['published_at'], row['link']), reverse=True)
+        stats.update(pending=len(candidates), deferred=len(candidates)-len(pending))
+        print(f"Feeds {stats['feeds_ok']}/{len(feeds)}; existing {len(known)}; unseen {len(pending)}", flush=True)
+        # Batches never reserve more slots than the remaining insert or attempt limit.
+        # No new calls are submitted after a fatal provider error; in-flight calls are bounded.
+        with ThreadPoolExecutor(max_workers=args.workers) as pool:
+            while pending and stats['inserted'] < args.max_new and stats['attempted'] < args.max_attempts:
+                size = min(args.workers, args.max_new-stats['inserted'], args.max_attempts-stats['attempted'], len(pending))
+                batch, pending = pending[:size], pending[size:]
+                jobs = {pool.submit(prepare, row, client, model): row for row in batch}
+                stats['attempted'] += size
+                for job in as_completed(jobs):
+                    row = jobs[job]
+                    try:
+                        article, usage, seconds = job.result()
+                    except FATAL_MODEL_ERRORS:
+                        raise
+                    except Exception as error:
+                        # A broken recent article must not consume every later run's budget.
+                        retries[row['link']] = time.time() + 6 * 3600
+                        write_status(retry_path, retries)
+                        stats['article_errors'].append({'link': row['link'], 'error': type(error).__name__, 'http_status': getattr(getattr(error, 'response', None), 'status_code', None)})
+                        print(f"Article warning: {row['company']}: {type(error).__name__}", flush=True)
+                        continue
+                    # Database errors fail the run; never call them a skipped article.
+                    db.table('engblogs_posts').insert(article).execute()
+                    stats['inserted'] += 1
+                    for name in ('prompt_tokens', 'completion_tokens', 'total_tokens'):
+                        stats[name] += usage.get(name, 0)
+                    print(f"Inserted: {row['company']} · {row['title']} ({seconds:.1f}s)", flush=True)
+        stats['remaining'] = len(candidates) - stats['inserted']
+        if stats['attempted'] and not stats['inserted']:
+            raise RuntimeError('No attempted articles could be imported')
+
+
+def write_status(path, stats):
+    with tempfile.NamedTemporaryFile(mode='w', dir=path.parent, delete=False) as file:
+        json.dump(stats, file, indent=2)
+        temporary = file.name
+    os.replace(temporary, path)
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--max-new', type=int, default=20)
+    parser.add_argument('--max-attempts', type=int, default=30)
+    parser.add_argument('--workers', type=int, default=4)
+    parser.add_argument('--state-dir', type=Path, default=Path('~/.local/state/engblogs').expanduser())
+    args = parser.parse_args(argv)
+    if not 1 <= args.workers <= 8 or not 1 <= args.max_new <= args.max_attempts <= 200:
+        parser.error('Require workers 1–8 and 1 <= max-new <= max-attempts <= 200')
+    args.state_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+    with (args.state_dir / 'ingest.lock').open('a') as lock:
         try:
-            return datetime.datetime.strptime(date_string, fmt).strftime("%Y-%m-%d")
-        except ValueError:
-            continue
-    raise ValueError(f"couldn't parse date {date_string} with any of the known formats")
-
-
-def get_existing_links(entries):
-    links = list(dict.fromkeys(entry.link for entry in entries if entry.get("link")))
-    existing = set()
-    for offset in range(0, len(links), 20):
-        rows = supabase.table("engblogs_posts").select("link").in_("link", links[offset:offset + 20]).execute().data
-        existing.update(row["link"] for row in rows)
-    return existing
-
-
-def parse_feed(url, company, max_new=None):
-    feed = feedparser.parse(url)
-    existing_links = get_existing_links(feed.entries)
-    inserted = 0
-    for entry in feed.entries:
-        # Skip on bad entries
-        if not hasattr(entry, "title") or not hasattr(entry, "link") or not hasattr(entry, "published"):
-            print(f"Skipped bad entry: {entry}")
-            continue
-
-        # Fetch title and description
-        title = entry.title
-        description = getattr(entry, "description", "")
-        # Convert the timestamp into yyyy-mm-dd format
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            print('Another importer owns the lock', file=sys.stderr)
+            return 1
+        started = time.monotonic()
+        stats = dict(started_at=datetime.now(timezone.utc).isoformat(), status='running',
+                     inserted=0, attempted=0, feeds_ok=0, invalid_entries=0, feed_errors=[], article_errors=[],
+                     prompt_tokens=0, completion_tokens=0, total_tokens=0)
+        write_status(args.state_dir / 'last-run.json', stats)
         try:
-            published_at = parse_date(entry.published)
-        except ValueError:
-            print(f"Skipped unsupported date from {company}: {entry.published}")
-            continue
-        link = entry.link
-
-        # Check against the in-memory set instead of querying Supabase per entry
-        if link in existing_links:
-            print(f"Skipped existing post: {title} from {company}")
-            continue
-
-        # If the entry is not a duplicate, generate a summary and buzzwords
-        try:
-            # Get the full post text
-            full_text = scrape_post(link)
-
-            # Get post insights
-            insights = get_post_insights(client, title, full_text)
-            summary = insights["summary"]
-            buzzwords = insights["buzzwords"]
-
-            # Insert the new entry into the 'posts' table
-            entry_data = {
-                "published_at": published_at,
-                "company": company,
-                "title": title,
-                "link": link,
-                "description": description,
-                "summary": summary,
-                "full_text": full_text,
-                "buzzwords": buzzwords,
-            }
-            supabase.table("engblogs_posts").insert(entry_data).execute()
-            existing_links.add(link)
-            inserted += 1
-            print(f"Inserted post: {title} from {company}")
-            if inserted == max_new:
-                break
-
-        except Exception as e:
-            print(f"Error: {e}")
-            continue
+            ingest(args, stats)
+            stats['status'] = 'degraded' if stats['feed_errors'] or stats['article_errors'] else 'success'
+        except Exception as error:
+            # SDK exception strings can contain credential fragments. Log only the class/code.
+            stats.update(status='failed', error=type(error).__name__, http_status=getattr(error, 'status_code', None))
+        stats.update(finished_at=datetime.now(timezone.utc).isoformat(), seconds=round(time.monotonic()-started, 2))
+        write_status(args.state_dir / 'last-run.json', stats)
+        if stats['status'] != 'failed':
+            write_status(args.state_dir / 'last-success.json', stats)
+        print(json.dumps(stats), flush=True)
+        return int(stats['status'] == 'failed')
 
 
-    return inserted
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--max-new", type=int, help="Stop after this many successful imports")
-    args = parser.parse_args()
-    if args.max_new is not None and args.max_new < 1:
-        parser.error("--max-new must be positive")
-    feeds = supabase.table("engblogs_links").select("company, link").execute().data
-    inserted = 0
-    for feed in tqdm(feeds, desc="Parsing RSS feeds", unit="feed"):
-        remaining = None if args.max_new is None else args.max_new - inserted
-        inserted += parse_feed(feed["link"], feed["company"], remaining)
-        if inserted == args.max_new:
-            break
-    print(f"Finished parsing feeds. Inserted {inserted} posts.")
+if __name__ == '__main__':
+    raise SystemExit(main())

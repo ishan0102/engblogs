@@ -1,0 +1,13 @@
+[Unit]
+Description=Import engineering articles into engblogs
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/.local/share/engblogs/app/scripts
+EnvironmentFile=%h/.config/engblogs/importer.env
+ExecStart=%h/.local/share/engblogs/app/scripts/.venv/bin/python -u hourly.py --max-new 20 --max-attempts 30 --workers 4
+TimeoutStartSec=10min
+UMask=0077
+NoNewPrivileges=true

@@ -2,7 +2,7 @@
 learn from your favorite tech companies
 
 ## what is this
-you could use an RSS reader but what's the fun in that? I run a cronjob that scrapes the RSS feeds of the companies listed below, calls gpt-3.5 to generate a short summary, and stores the data in supabase. there's a little next.js app hosted on vercel that lets you browse the data.
+you could use an RSS reader but what's the fun in that? An hourly systemd timer on my devbox reads the RSS feeds of the companies listed below, calls gpt-5-nano to generate a short summary, and stores the data in supabase. there's a little next.js app hosted on vercel that lets you browse the data.
 
 ![diagram](https://github.com/ishan0102/engblogs/assets/47067154/75f172ad-2214-48b7-9f76-1ac297b7f300)
 
@@ -15,14 +15,41 @@ curl "$SUPABASE_URL/rest/v1/engblogs_posts?select=*" \
 ```
 this will return some JSON
 
-## cron
-The hourly importer reads the configured feeds and adds new articles to `engblogs_posts`.
-Run `uv run hourly.py --max-new 1` from `scripts/` to test one new import.
-Use a server-side Supabase secret key for the importer and a publishable key for the gallery.
-The macOS schedule and runtime installer live in the personal dotfiles repo under `jobs/`.
+## Importer
+
+The devbox owns ingestion; the Mac does not need to be awake. Feeds are fetched with eight workers, then at most four new articles are scraped and summarized at once, newest first. Existing links are read in paginated batches, and duplicate feed entries are removed before model calls. A filesystem lock prevents overlapping jobs on the owner machine. Do not run a second importer on another machine.
+
+Scheduled runs insert at most 20 posts and attempt at most 30 articles. HTTP requests have timeouts and size limits; model input is capped at 16,000 article characters and output at 600 tokens, with minimal reasoning and no automatic SDK retries. A bad credential, denied model access, quota/rate limit, invalid model request or database failure fails the run rather than retrying every article. Invalid summaries are never inserted as placeholder text.
+
+Use Python 3.13 and uv:
+
+```sh
+cd scripts
+uv sync --frozen
+uv run hourly.py --max-new 1 --max-attempts 3 --workers 1
+```
+
+Set `SUPABASE_URL` and `SUPABASE_KEY` to the server-side database credentials in the devbox's `~/.config/engblogs/importer.env` (mode 0600). The importer reads `OPENAI_API_KEY` from `~/.extras`; explicit process environment takes precedence. A local `scripts/.env` is supported as a fallback, but an old OpenAI value there cannot override `~/.extras`. Never expose the server-side Supabase key in browser variables. `ENGBLOGS_MODEL` optionally selects another model compatible with the summarizer's parameters.
+
+Deploy the repository to `~/.local/share/engblogs/app` (a symlink to a release), install its locked Python dependencies, and install the user units:
+
+```sh
+cp deploy/engblogs.service deploy/engblogs.timer ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user start engblogs.service
+systemctl --user enable --now engblogs.timer
+systemctl --user list-timers engblogs.timer
+journalctl --user -u engblogs.service -n 60
+```
+
+The timer runs one minute after activation and hourly with up to 45 seconds of jitter; it catches up after downtime. User lingering must be enabled for logout-independent operation. Disable the old Mac `feed-jobs/engblogs.sh` cron before enabling the devbox timer; `rsrch.sh` is independent.
+
+`~/.local/state/engblogs/last-run.json` records timing, insertion counts, token usage and errors. `last-success.json` retains the last completed scan. Feed-specific problems are reported as degraded coverage; all-feed failure, an entirely unsuccessful article batch, or fatal model/database errors produce a nonzero exit and a failed systemd service. A killed/interrupted run leaves status `running` and must be interpreted with the systemd result. Logs remain in the journal instead of being overwritten each hour.
+
+Failed article fetches or invalid summaries are deferred for six hours in `article-retries.json`, so broken recent articles do not consume every run's budget. Fatal provider errors never enter that per-article cooldown. Backlog drains within the same limits on later hourly runs. For an explicit bounded catch-up, use `--max-new 100 --max-attempts 120`; never start a second process beside the timer. Feed history is limited to what each publisher includes in RSS. Existing posts are not resummarized. Confirm new rows on the site (its page cache can take up to 30 minutes), then rerun to verify the new links are skipped.
 
 ## contribute
-please do! run `npm run dev` in the `client` folder to start the webapp. the `scripts` folder contains the code to fetch data from RSS feeds, which you can repurpose for any RSS feeds you want.
+please do! run `bun run dev` in the `client` folder to start the webapp. the `scripts` folder contains the code to fetch data from RSS feeds, which you can repurpose for any RSS feeds you want.
 
 ## blog links
 | Company                | Link                                                         |

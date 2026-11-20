@@ -45,7 +45,7 @@ async function getPosts(page: number = 1, companies: string[] = []) {
 
   if (error) {
     console.error("Error fetching posts:", error);
-    return { posts: [], count: 0 };
+    throw new Error("Could not load articles. Please try again shortly.");
   }
 
   return { posts, count };
@@ -59,7 +59,7 @@ async function getCompanies() {
 
   if (error) {
     console.error("Error fetching companies:", error);
-    return [];
+    throw new Error("Could not load companies. Please try again shortly.");
   }
 
   const companies = data!.map((company) => ({

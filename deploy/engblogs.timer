@@ -1,0 +1,11 @@
+[Unit]
+Description=Refresh engblogs hourly on the devbox
+
+[Timer]
+OnCalendar=hourly
+OnActiveSec=1min
+Persistent=true
+RandomizedDelaySec=45s
+
+[Install]
+WantedBy=timers.target
