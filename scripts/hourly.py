@@ -1,8 +1,7 @@
 """Bounded, single-owner RSS ingestion; run on the devbox with systemd."""
 import argparse
-import calendar
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import fcntl
 import json
 import os
@@ -12,14 +11,14 @@ import sys
 import tempfile
 import time
 
-import feedparser
 import httpx
 from dotenv import dotenv_values
 from openai import OpenAI, AuthenticationError, PermissionDeniedError, RateLimitError, BadRequestError
 from supabase import create_client
 
-from scrape import scrape_post, fetch_bytes
-from summarize import get_post_insights
+from scrape import scrape_post
+from sources import active_sources, read_source
+from summarize import DEFAULT_MODEL, get_post_insights
 
 FATAL_MODEL_ERRORS = (AuthenticationError, PermissionDeniedError, RateLimitError, BadRequestError)
 
@@ -44,25 +43,6 @@ def config():
     return values
 
 
-def read_feed(feed):
-    parsed = feedparser.parse(fetch_bytes(feed['link']))
-    if not parsed.entries:
-        raise ValueError('Feed has no parseable entries')
-    rows, invalid = [], 0
-    for entry in parsed.entries:
-        stamp = entry.get('published_parsed') or entry.get('updated_parsed')
-        if not entry.get('title') or not entry.get('link') or not stamp:
-            invalid += 1
-            continue
-        published = datetime.fromtimestamp(calendar.timegm(stamp), timezone.utc).date()
-        if published > datetime.now(timezone.utc).date():
-            invalid += 1
-            continue
-        rows.append(dict(title=entry.title, link=entry.link, company=feed['company'],
-                         description=entry.get('description', ''), published_at=published.isoformat()))
-    return rows, invalid
-
-
 def existing_links(db):
     links, offset = set(), 0
     while True:
@@ -75,26 +55,44 @@ def existing_links(db):
 
 def prepare(row, client, model):
     started = time.monotonic()
-    text = scrape_post(row['link'])
-    if not text or len(text.strip()) < 100:
-        raise ValueError('No usable article text')
+    article = {key: value for key, value in row.items() if not key.startswith('_')}
+    excerpt = row.get('description', '')
+    text = row.get('_feed_text', '')
+    if row.get('_content_mode') == 'publisher_summary':
+        text = ''
+    elif not text:
+        try:
+            text = scrape_post(row['link']) or ''
+        except (httpx.HTTPError, ValueError):
+            if len(excerpt) < 60:
+                raise
+    if len(text.strip()) < 100:
+        if len(excerpt) < 60:
+            raise ValueError('No usable article text or publisher excerpt')
+        # A short RSS description is not the full article. Display it verbatim,
+        # label the provenance, and avoid paying an LLM to embellish it.
+        return {**article, 'full_text': None, 'summary': 'Publisher summary: ' + excerpt[:2000], 'buzzwords': []}, {}, time.monotonic() - started
     insights, usage = get_post_insights(client, row['title'], text, model=model, with_usage=True)
-    return {**row, 'full_text': text, **insights}, usage, time.monotonic() - started
+    return {**article, 'full_text': text, **insights}, usage, time.monotonic() - started
 
 
 def ingest(args, stats):
     settings = config()
     db = create_client(settings['SUPABASE_URL'], settings['SUPABASE_KEY'])
-    model = settings.get('ENGBLOGS_MODEL') or 'gpt-5-nano'
+    model = settings.get('ENGBLOGS_MODEL') or DEFAULT_MODEL
     with OpenAI(api_key=settings['OPENAI_API_KEY'], timeout=httpx.Timeout(45, connect=10), max_retries=0) as client:
         # Authentication/model access is checked once, before scraping or paid requests.
         client.models.retrieve(model)
-        feeds = db.table('engblogs_links').select('company,link').execute().data
+        feeds = active_sources()
+        if args.source:
+            feeds = [feed for feed in feeds if feed['company'] in args.source]
+            if len(feeds) != len(set(args.source)):
+                raise ValueError('Unknown or inactive source')
         known = existing_links(db)
         stats.update(model=model, feeds=len(feeds), existing=len(known))
         candidates = {}
         with ThreadPoolExecutor(max_workers=8) as pool:
-            jobs = {pool.submit(read_feed, feed): feed['company'] for feed in feeds}
+            jobs = {pool.submit(read_source, feed): feed['company'] for feed in feeds}
             for job in as_completed(jobs):
                 company = jobs[job]
                 try:
@@ -102,7 +100,7 @@ def ingest(args, stats):
                     stats['invalid_entries'] += invalid
                     stats['feeds_ok'] += 1
                     for row in rows:
-                        if row['link'] not in known:
+                        if row['link'] not in known and row['published_at'] >= (datetime.now(timezone.utc).date() - timedelta(days=args.lookback_days)).isoformat():
                             candidates.setdefault(row['link'], row)
                 except Exception as error:
                     stats['feed_errors'].append({'company': company, 'error': type(error).__name__, 'http_status': getattr(getattr(error, 'response', None), 'status_code', None)})
@@ -111,7 +109,9 @@ def ingest(args, stats):
             raise RuntimeError('All feeds failed')
         retry_path = args.state_dir / 'article-retries.json'
         retries = json.loads(retry_path.read_text()) if retry_path.exists() else {}
-        retries = {link: until for link, until in retries.items() if link not in known and until > time.time()}
+        retries = {link: until for link, until in retries.items()
+                   if link not in known and until > time.time()
+                   and candidates.get(link, {}).get('_content_mode') != 'publisher_summary'}
         pending = sorted((row for link, row in candidates.items() if link not in retries),
                          key=lambda row: (row['published_at'], row['link']), reverse=True)
         stats.update(pending=len(candidates), deferred=len(candidates)-len(pending))
@@ -160,8 +160,12 @@ def main(argv=None):
     parser.add_argument('--max-new', type=int, default=20)
     parser.add_argument('--max-attempts', type=int, default=30)
     parser.add_argument('--workers', type=int, default=4)
+    parser.add_argument('--source', action='append', help='Restrict a bounded verification run to an active source; repeatable')
+    parser.add_argument('--lookback-days', type=int, default=120, help='Only import recent articles; existing history is retained')
     parser.add_argument('--state-dir', type=Path, default=Path('~/.local/state/engblogs').expanduser())
     args = parser.parse_args(argv)
+    if not 1 <= args.lookback_days <= 3650:
+        parser.error('Require lookback-days 1–3650')
     if not 1 <= args.workers <= 8 or not 1 <= args.max_new <= args.max_attempts <= 200:
         parser.error('Require workers 1–8 and 1 <= max-new <= max-attempts <= 200')
     args.state_dir.mkdir(parents=True, exist_ok=True, mode=0o700)

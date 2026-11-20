@@ -1,0 +1,472 @@
+[
+  {
+    "company": "Airbnb",
+    "link": "https://airbnb.tech/feed/",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/airbnb.svg?t=2023-11-04T03%3A13%3A47.994Z",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Allen AI",
+    "link": "https://allenai.org/rss.xml",
+    "logo_url": null,
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Anthropic",
+    "link": "https://www.anthropic.com/engineering",
+    "logo_url": null,
+    "active": true,
+    "reviewed_at": "2026-11-20",
+    "kind": "anthropic"
+  },
+  {
+    "company": "Apple ML",
+    "link": "https://machinelearning.apple.com/rss.xml",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/apple.png?t=2023-11-04T03%3A15%3A13.848Z",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "AWS ML",
+    "link": "https://aws.amazon.com/blogs/machine-learning/feed/",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/aws_ml.png?t=2023-11-04T03%3A15%3A01.997Z",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Berkeley AI",
+    "link": "https://bair.berkeley.edu/blog/feed.xml",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/berkeley_ai.png",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Chromium",
+    "link": "https://blog.chromium.org/feeds/posts/default",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/chromium.png?t=2023-11-04T03%3A15%3A24.445Z",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "ClickHouse",
+    "link": "https://clickhouse.com/rss.xml",
+    "logo_url": null,
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Cloudflare",
+    "link": "https://blog.cloudflare.com/rss/",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/cloudflare.png?t=2023-11-04T03%3A15%3A33.057Z",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Cohere AI",
+    "link": "https://txt.cohere.ai/rss/",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/cohere_ai.webp?t=2023-11-04T03%3A15%3A38.719Z",
+    "active": false,
+    "reviewed_at": "2026-11-20",
+    "reason": "Legacy txt.cohere.ai feed redirects to HTML; current blog endpoints also return HTML, not RSS."
+  },
+  {
+    "company": "Cursor",
+    "link": "https://cursor.com/blog",
+    "logo_url": null,
+    "active": true,
+    "reviewed_at": "2026-11-20",
+    "kind": "cursor"
+  },
+  {
+    "company": "Databricks",
+    "link": "https://www.databricks.com/feed",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/databricks.png?t=2023-11-04T03%3A15%3A45.061Z",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Datadog",
+    "link": "https://www.datadoghq.com/blog/engineering/index.xml",
+    "logo_url": null,
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "DoorDash",
+    "link": "https://doordash.engineering/category/backend/feed/",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/doordash.png?t=2023-11-04T03%3A15%3A56.448Z",
+    "active": false,
+    "reviewed_at": "2026-11-20",
+    "reason": "Old and replacement engineering feeds return 403 from the devbox."
+  },
+  {
+    "company": "DoorDash ML",
+    "link": "https://doordash.engineering/category/data-science-and-machine-learning/feed/",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/doordash_ml.png?t=2023-11-04T03%3A16%3A03.793Z",
+    "active": false,
+    "reviewed_at": "2026-11-20",
+    "reason": "Retired category feed; replacement returns 403. Avoid duplicate DoorDash sources."
+  },
+  {
+    "company": "Dropbox",
+    "link": "https://dropbox.tech/feed",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/dropbox.png?t=2023-11-04T03%3A16%3A11.494Z",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Duolingo",
+    "link": "https://blog.duolingo.com/rss/",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/duolingo.svg?t=2023-11-04T03%3A16%3A17.551Z",
+    "active": false,
+    "reviewed_at": "2026-11-20",
+    "reason": "General language-learning/editorial feed rather than an engineering source."
+  },
+  {
+    "company": "EleutherAI",
+    "link": "https://blog.eleuther.ai/index.xml",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/eleuther_ai.webp?t=2023-11-04T03%3A16%3A21.527Z",
+    "active": false,
+    "reviewed_at": "2026-11-20",
+    "reason": "Legacy and replacement feed candidates return 404."
+  },
+  {
+    "company": "ElevenLabs",
+    "link": "https://elevenlabs.io/blog/rss.xml",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/eleven_labs.png",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Fly.io",
+    "link": "https://fly.io/blog/feed.xml",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/fly_io.svg?t=2023-11-04T03%3A16%3A25.853Z",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "GitHub",
+    "link": "https://github.blog/engineering.atom",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/github.png?t=2023-11-04T03%3A16%3A30.774Z",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Google AI",
+    "link": "https://blog.google/technology/ai/rss/",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/google_ai.png?t=2023-11-04T03%3A16%3A50.593Z",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Google Cloud",
+    "link": "https://cloudblog.withgoogle.com/rss/",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/google_cloud.jpeg?t=2023-11-04T03%3A16%3A54.499Z",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Google DeepMind",
+    "link": "https://deepmind.google/blog/rss.xml",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/google_deepmind.webp?t=2023-11-04T03%3A16%3A59.009Z",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Google Research",
+    "link": "https://research.google/blog/rss/",
+    "logo_url": null,
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Hudson River Trading",
+    "link": "https://www.hudsonrivertrading.com/feed/",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/hudson_river_trading.png?t=2023-11-04T03%3A17%3A03.215Z",
+    "active": false,
+    "reviewed_at": "2026-11-20",
+    "reason": "Feed returns 403 from the devbox."
+  },
+  {
+    "company": "Hugging Face",
+    "link": "https://huggingface.co/blog/feed.xml",
+    "logo_url": null,
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Ink and Switch",
+    "link": "https://www.inkandswitch.com/index.xml",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/ink_and_switch.png?t=2023-11-04T03%3A17%3A07.569Z",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Instacart",
+    "link": "https://tech.instacart.com/feed",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/instacart.png?t=2023-11-04T03%3A17%3A14.469Z",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Instagram",
+    "link": "https://instagram-engineering.com/feed",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/instagram.png?t=2023-11-04T03%3A17%3A18.955Z",
+    "active": false,
+    "reviewed_at": "2026-11-20",
+    "reason": "Legacy Medium domain times out; current Meta engineering source covers the company."
+  },
+  {
+    "company": "Jane Street",
+    "link": "https://blog.janestreet.com/feed.xml",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/jane_street.jpeg?t=2023-11-04T03%3A17%3A25.231Z",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Lambda Labs",
+    "link": "https://lambdalabs.com/blog/rss.xml",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/lambda_labs.jpeg?t=2023-11-04T03%3A17%3A30.005Z",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Linear",
+    "link": "https://linear.app/rss/now.xml",
+    "logo_url": null,
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "LinkedIn",
+    "link": "https://engineering.linkedin.com/blog.rss.html",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/linkedin.svg?t=2023-11-04T03%3A17%3A35.973Z",
+    "active": false,
+    "reviewed_at": "2026-11-20",
+    "reason": "Retired engineering RSS endpoint (404)."
+  },
+  {
+    "company": "Lyft",
+    "link": "https://eng.lyft.com/feed",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/lyft.png?t=2023-11-04T03%3A17%3A42.621Z",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Meta",
+    "link": "https://engineering.fb.com/feed/",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/meta.png",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Microsoft AI",
+    "link": "https://blogs.microsoft.com/ai/feed/",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/microsoft_ai.png?t=2023-11-04T03%3A18%3A03.397Z",
+    "active": false,
+    "reviewed_at": "2026-11-20",
+    "reason": "Legacy feed is gone (410); replaced by Microsoft Research."
+  },
+  {
+    "company": "Microsoft Research",
+    "link": "https://www.microsoft.com/en-us/research/feed/",
+    "logo_url": null,
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Mistral AI",
+    "link": "https://mistral.ai/news/rss",
+    "logo_url": null,
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "MIT AI",
+    "link": "https://news.mit.edu/rss/topic/artificial-intelligence2",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/mit_ai.jpeg?t=2023-11-04T03%3A18%3A08.572Z",
+    "active": false,
+    "reviewed_at": "2026-11-20",
+    "reason": "Feed returns 403 from the devbox; prioritize primary engineering/research labs."
+  },
+  {
+    "company": "Modal",
+    "link": "https://modal.com/blog/atom.xml",
+    "logo_url": null,
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Modular AI",
+    "link": "https://www.modular.com/blog/rss.xml",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/modular_ai.webp?t=2023-11-04T03%3A18%3A13.554Z",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Netflix",
+    "link": "https://netflixtechblog.com/feed",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/netflix.jpeg?t=2023-11-04T03%3A18%3A19.018Z",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "NVIDIA Developer",
+    "link": "https://developer.nvidia.com/blog/feed/",
+    "logo_url": null,
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "OpenAI",
+    "link": "https://openai.com/news/rss.xml",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/openai.png?t=2023-11-04T03%3A18%3A22.888Z",
+    "active": true,
+    "reviewed_at": "2026-11-20",
+    "content_mode": "publisher_summary",
+    "reason": "Official RSS is current; article pages return 403. Display the exact publisher excerpt rather than inventing a full-article summary."
+  },
+  {
+    "company": "Pinterest",
+    "link": "https://medium.com/feed/@Pinterest_Engineering",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/pinterest.png",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Ramp",
+    "link": "https://engineering.ramp.com/feed.xml",
+    "logo_url": null,
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Reka AI",
+    "link": "https://reka.ai/feed/",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/reka_ai.png?t=2023-11-04T03%3A18%3A32.585Z",
+    "active": false,
+    "reviewed_at": "2026-11-20",
+    "reason": "Legacy RSS endpoint returns 404."
+  },
+  {
+    "company": "Replicate",
+    "link": "https://replicate.com/blog/rss",
+    "logo_url": null,
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Roblox",
+    "link": "https://blog.roblox.com/category/product-tech/feed/",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/roblox.png?t=2023-11-04T03%3A18%3A36.812Z",
+    "active": false,
+    "reviewed_at": "2026-11-20",
+    "reason": "Legacy feed redirects to a newsroom HTML page."
+  },
+  {
+    "company": "Salesforce",
+    "link": "https://engineering.salesforce.com/feed/",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/salesforce.png?t=2023-11-04T03%3A18%3A42.481Z",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Snorkel AI",
+    "link": "https://snorkel.ai/feed/",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/snorkel_ai.webp?t=2023-11-04T03%3A18%3A48.386Z",
+    "active": false,
+    "reviewed_at": "2026-11-20",
+    "reason": "Broad corporate feed; focus the catalog on technical research and engineering sources."
+  },
+  {
+    "company": "SoundCloud",
+    "link": "https://developers.soundcloud.com/blog/blog.rss",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/soundcloud.png?t=2023-11-04T03%3A18%3A52.068Z",
+    "active": false,
+    "reviewed_at": "2026-11-20",
+    "reason": "Legacy feed is intermittently unparseable from the devbox."
+  },
+  {
+    "company": "Spotify",
+    "link": "https://engineering.atspotify.com/feed/",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/spotify.png?t=2023-11-04T03%3A18%3A56.619Z",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Stability AI",
+    "link": "https://stability.ai/blog?format=rss",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/stability_ai.png?t=2023-11-04T03%3A19%3A01.943Z",
+    "active": false,
+    "reviewed_at": "2026-11-20",
+    "reason": "Old Squarespace RSS endpoint returns 404."
+  },
+  {
+    "company": "Stanford AI",
+    "link": "https://ai.stanford.edu/blog/feed.xml",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/stanford_ai.jpeg?t=2023-11-04T03%3A19%3A07.485Z",
+    "active": false,
+    "reviewed_at": "2026-11-20",
+    "reason": "Legacy SAIL feed has not published since May 2022; do not treat a working URL as an active source."
+  },
+  {
+    "company": "Stripe",
+    "link": "https://stripe.com/blog/feed.rss",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/stripe.svg?t=2023-11-04T03%3A19%3A11.778Z",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Supabase",
+    "link": "https://supabase.com/rss.xml",
+    "logo_url": null,
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "The New York Times",
+    "link": "http://open.blogs.nytimes.com/feed/",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/the_new_york_times.png?t=2023-11-04T03%3A19%3A16.388Z",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Thinking Machines",
+    "link": "https://thinkingmachines.ai/blog/",
+    "logo_url": null,
+    "active": true,
+    "reviewed_at": "2026-11-20",
+    "kind": "thinking_machines"
+  },
+  {
+    "company": "Together AI",
+    "link": "https://www.together.ai/blog/rss.xml",
+    "logo_url": null,
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Two Sigma",
+    "link": "https://www.twosigma.com/topic/engineering/feed/",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/two_sigma.jpeg",
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  },
+  {
+    "company": "Uber",
+    "link": "https://www.uber.com/blog/engineering/rss/",
+    "logo_url": "https://dqxhcdxglrnakhzmzwvu.supabase.co/storage/v1/object/public/engblogs-company-logos/uber.png?t=2023-11-04T03%3A19%3A24.546Z",
+    "active": false,
+    "reviewed_at": "2026-11-20",
+    "reason": "Official feed returns 406 from the devbox, including the current locale URL."
+  },
+  {
+    "company": "Vercel",
+    "link": "https://vercel.com/atom",
+    "logo_url": null,
+    "active": true,
+    "reviewed_at": "2026-11-20"
+  }
+]

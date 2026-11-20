@@ -1,4 +1,7 @@
 import Filter from "@/components/Filter";
+import sources from "@/data/sources.json";
+
+const activeCompanies = sources.filter((source) => source.active).map((source) => source.company);
 import Post from "@/components/Post";
 import {
   Pagination,
@@ -27,14 +30,12 @@ async function getPosts(page: number = 1, companies: string[] = []) {
   const query = supabase
     .from("engblogs_posts")
     .select("title, link, summary, company, published_at, links:engblogs_links ( company, logo_url )", { count: "exact" })
+    .in("company", activeCompanies)
     .order("published_at", { ascending: false })
     .order("id", { ascending: false });
 
   if (companies.length > 0) {
-    const ilikeConditions = companies
-      .map((company) => `company.ilike.%${company}%`)
-      .join(",");
-    query.or(ilikeConditions);
+    query.in("company", companies);
   }
 
   const {
@@ -55,6 +56,7 @@ async function getCompanies() {
   let { data, error } = await supabase
     .from("engblogs_links")
     .select("company, logo_url")
+    .in("company", activeCompanies)
     .order("company", { ascending: true });
 
   if (error) {
@@ -79,7 +81,7 @@ export default async function Page({
 }) {
   const pageNumber = searchParams?.page ? Number(searchParams.page) : 1;
   const selectedCompanies = searchParams?.companies
-    ? searchParams.companies.split(",")
+    ? searchParams.companies.split(",").filter((company) => activeCompanies.includes(company))
     : [];
   const { posts, count } = await getPosts(pageNumber, selectedCompanies);
   const maxPageNumber = Math.ceil((count || 1) / PAGE_SIZE);
@@ -179,13 +181,13 @@ export default async function Page({
             </PaginationLink>
           )}
 
-          <PaginationNext
+          {pageNumber < maxPageNumber && <PaginationNext
             href={`?page=${pageNumber + 1}${
               searchParams && searchParams.companies
                 ? `&companies=${searchParams.companies}`
                 : ""
             }`}
-          />
+          />}
         </PaginationContent>
       </Pagination>
     </div>

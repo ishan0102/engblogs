@@ -10,4 +10,5 @@ dependencies = [
     "python-dotenv>=1.1.1",
     "supabase>=2.17.0",
     "trafilatura>=2.0.0",
+    "lxml>=5.4.0",
 ]
